@@ -21,6 +21,12 @@
     <ClCompile Include="iocp_server.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="CTimer.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="CEvent.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="protocol.h">
@@ -36,6 +42,12 @@
       <Filter>헤더 파일\lua</Filter>
     </ClInclude>
     <ClInclude Include="framework.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="CTimer.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="CEvent.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

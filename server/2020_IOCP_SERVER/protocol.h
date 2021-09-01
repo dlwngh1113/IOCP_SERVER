@@ -1,5 +1,4 @@
 #pragma once
-#pragma once
 
 constexpr int SERVER_PORT = 3500;
 constexpr int MAX_ID_LEN = 10;
@@ -11,7 +10,18 @@ constexpr int VIEW_LIMIT = 7;				// 시야 반지름, 상대방과 사이에 6개의 타일이 있
 
 constexpr int NUM_NPC = 100000;
 
-#pragma pack (push, 1)
+constexpr int MAX_BUFFER = 4096;
+
+constexpr char OP_MODE_RECV = 0;
+constexpr char OP_MODE_SEND = 1;
+constexpr char OP_MODE_ACCEPT = 2;
+constexpr char OP_RANDOM_MOVE = 3;
+constexpr char OP_PLAYER_MOVE_NOTIFY = 4;
+constexpr char OP_RUNAWAY = 5;
+constexpr char OP_REVIVAL = 6;
+constexpr char OP_HEAL = 7;
+
+constexpr int  KEY_SERVER = 1000000;
 
 constexpr char SC_PACKET_LOGIN_OK	= 0;
 constexpr char SC_PACKET_MOVE		= 1;
@@ -28,6 +38,15 @@ constexpr char CS_CHAT		= 3;
 constexpr char CS_LOGOUT	= 4;
 constexpr char CS_TELEPORT	= 5;				// 부하 테스트용 동접 테스트를 위해 텔러포트로 Hot Spot 해소
 
+struct OVER_EX {
+	WSAOVERLAPPED wsa_over;
+	char	op_mode;
+	WSABUF	wsa_buf;
+	unsigned char iocp_buf[MAX_BUFFER];
+	int		object_id;
+};
+
+#pragma pack (push, 1)
 
 struct sc_packet_login_ok {
 	char size;
