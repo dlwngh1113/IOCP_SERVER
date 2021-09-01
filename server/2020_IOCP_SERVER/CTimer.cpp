@@ -1,5 +1,13 @@
 #include "CTimer.h"
 
+CTimer::CTimer()
+{
+}
+
+CTimer::~CTimer()
+{
+}
+
 void CTimer::add_timer(int obj_id, int ev_type, std::chrono::system_clock::time_point t, int target_id, char* mess)
 {
 	CEvent ev{ obj_id, t, ev_type, target_id, mess };
@@ -104,4 +112,9 @@ void CTimer::send_enter_packet(int to_client, int new_id)
 	g_clients[new_id].c_lock.unlock();
 	p.o_type = 0;
 	send_packet(to_client, &p);
+}
+
+void CTimer::join()
+{
+	std::thread timer_thread{ time_worker };
 }

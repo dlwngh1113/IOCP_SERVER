@@ -69,94 +69,94 @@ SQLHDBC hdbc;
 SQLHSTMT hstmt = 0;
 SQLRETURN dbRetcode;
 
-struct event_type {
-	int obj_id;
-	system_clock::time_point wakeup_time;
-	int event_id;
-	int target_id;
-	char* message;
-
-	constexpr bool operator < (const event_type& _Left) const
-	{
-		return (wakeup_time > _Left.wakeup_time);
-	}
-};
-
-priority_queue<event_type> timer_queue;
-mutex timer_l;
-
-void add_timer(int obj_id, int ev_type, system_clock::time_point t, int target_id = NULL, char* mess = NULL)
-{
-	event_type ev{ obj_id, t, ev_type, target_id, mess };
-	timer_l.lock();
-	timer_queue.push(ev);
-	timer_l.unlock();
-}
-
-void time_worker()
-{
-	while (true) {
-		while (true) {
-			if (false == timer_queue.empty()) {
-				timer_l.lock();
-				event_type ev = timer_queue.top();
-				timer_l.unlock();
-				if (ev.wakeup_time > system_clock::now())
-					break;
-				timer_l.lock();
-				timer_queue.pop();
-				timer_l.unlock();
-
-				switch (ev.event_id)
-				{
-				case OP_RANDOM_MOVE:
-				{
-					//random_move_npc(ev.obj_id);
-					OVER_EX* over_ex = new OVER_EX;
-					over_ex->op_mode = OP_RANDOM_MOVE;
-					PostQueuedCompletionStatus(h_iocp, 1, ev.obj_id, &over_ex->wsa_over);
-					//add_timer(ev.obj_id, OP_RANDOM_MOVE, system_clock::now() + 1s);
-				}
-					break;
-				case OP_RUNAWAY:
-				{
-					send_chat_packet(ev.target_id, ev.obj_id, ev.message);
-				}
-					break;
-				case OP_REVIVAL:
-				{
-					g_clients[ev.obj_id].level = rand() % 10 + 1;
-					g_clients[ev.obj_id].hp = g_clients[ev.obj_id].level * 100;
-					for (int i = 0; i < MAX_USER; ++i) {
-						if (is_near(ev.obj_id, i) && g_clients[i].in_use) {
-							g_clients[i].vl.lock();
-							g_clients[i].view_list.insert(ev.obj_id);
-							send_enter_packet(i, ev.obj_id);
-							g_clients[i].vl.unlock();
-						}
-					}
-					OVER_EX* over_ex = new OVER_EX;
-					over_ex->op_mode = OP_RANDOM_MOVE;
-					PostQueuedCompletionStatus(h_iocp, 1, ev.obj_id, &over_ex->wsa_over);
-				}
-				break;
-				case OP_HEAL:
-				{
-					OVER_EX* over_ex = new OVER_EX;
-					over_ex->op_mode = OP_HEAL;
-					PostQueuedCompletionStatus(h_iocp, 1, ev.obj_id, &over_ex->wsa_over);
-				}
-					break;
-				default:
-					printf("Unknown event type: %c\n", ev.event_id);
-					break;
-				}
-			}
-			else break;
-		}
-		this_thread::sleep_for(1ms);
-	}
-}
+//struct event_type {
+//	int obj_id;
+//	system_clock::time_point wakeup_time;
+//	int event_id;
+//	int target_id;
+//	char* message;
+//
+//	constexpr bool operator < (const event_type& _Left) const
+//	{
+//		return (wakeup_time > _Left.wakeup_time);
+//	}
+//};
+//
+//priority_queue<event_type> timer_queue;
+//mutex timer_l;
+//
+//void add_timer(int obj_id, int ev_type, system_clock::time_point t, int target_id = NULL, char* mess = NULL)
+//{
+//	event_type ev{ obj_id, t, ev_type, target_id, mess };
+//	timer_l.lock();
+//	timer_queue.push(ev);
+//	timer_l.unlock();
+//}
+//
+//void time_worker()
+//{
+//	while (true) {
+//		while (true) {
+//			if (false == timer_queue.empty()) {
+//				timer_l.lock();
+//				event_type ev = timer_queue.top();
+//				timer_l.unlock();
+//				if (ev.wakeup_time > system_clock::now())
+//					break;
+//				timer_l.lock();
+//				timer_queue.pop();
+//				timer_l.unlock();
+//
+//				switch (ev.event_id)
+//				{
+//				case OP_RANDOM_MOVE:
+//				{
+//					//random_move_npc(ev.obj_id);
+//					OVER_EX* over_ex = new OVER_EX;
+//					over_ex->op_mode = OP_RANDOM_MOVE;
+//					PostQueuedCompletionStatus(h_iocp, 1, ev.obj_id, &over_ex->wsa_over);
+//					//add_timer(ev.obj_id, OP_RANDOM_MOVE, system_clock::now() + 1s);
+//				}
+//					break;
+//				case OP_RUNAWAY:
+//				{
+//					send_chat_packet(ev.target_id, ev.obj_id, ev.message);
+//				}
+//					break;
+//				case OP_REVIVAL:
+//				{
+//					g_clients[ev.obj_id].level = rand() % 10 + 1;
+//					g_clients[ev.obj_id].hp = g_clients[ev.obj_id].level * 100;
+//					for (int i = 0; i < MAX_USER; ++i) {
+//						if (is_near(ev.obj_id, i) && g_clients[i].in_use) {
+//							g_clients[i].vl.lock();
+//							g_clients[i].view_list.insert(ev.obj_id);
+//							send_enter_packet(i, ev.obj_id);
+//							g_clients[i].vl.unlock();
+//						}
+//					}
+//					OVER_EX* over_ex = new OVER_EX;
+//					over_ex->op_mode = OP_RANDOM_MOVE;
+//					PostQueuedCompletionStatus(h_iocp, 1, ev.obj_id, &over_ex->wsa_over);
+//				}
+//				break;
+//				case OP_HEAL:
+//				{
+//					OVER_EX* over_ex = new OVER_EX;
+//					over_ex->op_mode = OP_HEAL;
+//					PostQueuedCompletionStatus(h_iocp, 1, ev.obj_id, &over_ex->wsa_over);
+//				}
+//					break;
+//				default:
+//					printf("Unknown event type: %c\n", ev.event_id);
+//					break;
+//				}
+//			}
+//			else break;
+//		}
+//		this_thread::sleep_for(1ms);
+//	}
+//}
 
 void wake_up_npc(int id)
 {
@@ -187,13 +187,13 @@ bool is_npc(int p1)
 	return p1 >= MAX_USER;
 }
 
-bool is_near(int p1, int p2)
-{
-	int dist = (g_clients[p1].x - g_clients[p2].x) * (g_clients[p1].x - g_clients[p2].x);
-	dist += (g_clients[p1].y - g_clients[p2].y) * (g_clients[p1].y - g_clients[p2].y);
-
-	return dist <= VIEW_LIMIT * VIEW_LIMIT;
-}
+//bool is_near(int p1, int p2)
+//{
+//	int dist = (g_clients[p1].x - g_clients[p2].x) * (g_clients[p1].x - g_clients[p2].x);
+//	dist += (g_clients[p1].y - g_clients[p2].y) * (g_clients[p1].y - g_clients[p2].y);
+//
+//	return dist <= VIEW_LIMIT * VIEW_LIMIT;
+//}
 
 void send_packet(int id, void* p)
 {
@@ -211,15 +211,15 @@ void send_packet(int id, void* p)
 	g_clients[id].c_lock.unlock();
 }
 
-void send_chat_packet(int to_client, int id, char *mess)
-{
-	sc_packet_chat p;
-	p.id = id;
-	p.size = sizeof(p);
-	p.type = SC_PACKET_CHAT;
-	strcpy_s(p.message, mess);
-	send_packet(to_client, &p);
-}
+//void send_chat_packet(int to_client, int id, char *mess)
+//{
+//	sc_packet_chat p;
+//	p.id = id;
+//	p.size = sizeof(p);
+//	p.type = SC_PACKET_CHAT;
+//	strcpy_s(p.message, mess);
+//	send_packet(to_client, &p);
+//}
 
 void send_login_ok(int id)
 {
@@ -257,20 +257,20 @@ void send_move_packet(int to_client, int id)
 	send_packet(to_client, &p);
 }
 
-void send_enter_packet(int to_client, int new_id)
-{
-	sc_packet_enter p;
-	p.id = new_id;
-	p.size = sizeof(p);
-	p.type = SC_PACKET_ENTER;
-	p.x = g_clients[new_id].x;
-	p.y = g_clients[new_id].y;
-	g_clients[new_id].c_lock.lock();
-	strcpy_s(p.name, g_clients[new_id].name);
-	g_clients[new_id].c_lock.unlock();
-	p.o_type = 0;
-	send_packet(to_client, &p);
-}
+//void send_enter_packet(int to_client, int new_id)
+//{
+//	sc_packet_enter p;
+//	p.id = new_id;
+//	p.size = sizeof(p);
+//	p.type = SC_PACKET_ENTER;
+//	p.x = g_clients[new_id].x;
+//	p.y = g_clients[new_id].y;
+//	g_clients[new_id].c_lock.lock();
+//	strcpy_s(p.name, g_clients[new_id].name);
+//	g_clients[new_id].c_lock.unlock();
+//	p.o_type = 0;
+//	send_packet(to_client, &p);
+//}
 
 void send_leave_packet(int to_client, int new_id)
 {
@@ -830,38 +830,38 @@ int API_SendLeaveMessage(lua_State* L)
 	return 0;
 }
 
-void initialize_NPC()
-{
-	cout << "Initializing NPCs\n";
-	for (int i = MAX_USER; i < MAX_USER + NUM_NPC; ++i)
-	{
-		g_clients[i].x = rand() % WORLD_WIDTH;
-		g_clients[i].y = rand() % WORLD_HEIGHT;
-		g_clients[i].level = rand() % 10 + 1;
-		g_clients[i].hp = g_clients[i].level * 100;
-		char npc_name[50];
-		sprintf_s(npc_name, "N%d", i);
-		strcpy_s(g_clients[i].name, npc_name);
-		g_clients[i].is_active = false;
-
-		lua_State* L = g_clients[i].L = luaL_newstate();
-		luaL_openlibs(L);
-
-		int error = luaL_loadfile(L, "monster.lua");
-		error = lua_pcall(L, 0, 0, 0);
-
-		lua_getglobal(L, "set_uid");
-		lua_pushnumber(L, i);
-		lua_pcall(L, 1, 1, 0);
-		// lua_pop(L, 1);// eliminate set_uid from stack after call
-
-		lua_register(L, "API_SendEnterMessage", API_SendEnterMessage);
-		lua_register(L, "API_SendLeaveMessage", API_SendLeaveMessage);
-		lua_register(L, "API_get_x", API_get_x);
-		lua_register(L, "API_get_y", API_get_y);
-	}
-	cout << "NPC initialize finished.\n";
-}
+//void initialize_NPC()
+//{
+//	cout << "Initializing NPCs\n";
+//	for (int i = MAX_USER; i < MAX_USER + NUM_NPC; ++i)
+//	{
+//		g_clients[i].x = rand() % WORLD_WIDTH;
+//		g_clients[i].y = rand() % WORLD_HEIGHT;
+//		g_clients[i].level = rand() % 10 + 1;
+//		g_clients[i].hp = g_clients[i].level * 100;
+//		char npc_name[50];
+//		sprintf_s(npc_name, "N%d", i);
+//		strcpy_s(g_clients[i].name, npc_name);
+//		g_clients[i].is_active = false;
+//
+//		lua_State* L = g_clients[i].L = luaL_newstate();
+//		luaL_openlibs(L);
+//
+//		int error = luaL_loadfile(L, "monster.lua");
+//		error = lua_pcall(L, 0, 0, 0);
+//
+//		lua_getglobal(L, "set_uid");
+//		lua_pushnumber(L, i);
+//		lua_pcall(L, 1, 1, 0);
+//		// lua_pop(L, 1);// eliminate set_uid from stack after call
+//
+//		lua_register(L, "API_SendEnterMessage", API_SendEnterMessage);
+//		lua_register(L, "API_SendLeaveMessage", API_SendLeaveMessage);
+//		lua_register(L, "API_get_x", API_get_x);
+//		lua_register(L, "API_get_y", API_get_y);
+//	}
+//	cout << "NPC initialize finished.\n";
+//}
 
 void random_move_npc(int id)
 {
@@ -948,53 +948,53 @@ void npc_ai_thread()
 
 int main()
 {
-	std::wcout.imbue(std::locale("korean"));
-	for (auto& cl : g_clients)
-		cl.in_use = false;
+	//std::wcout.imbue(std::locale("korean"));
+	//for (auto& cl : g_clients)
+	//	cl.in_use = false;
 
-	dbRetcode = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &henv);
-	dbRetcode = SQLSetEnvAttr(henv, SQL_ATTR_ODBC_VERSION, (SQLPOINTER*)SQL_OV_ODBC3, 0);
-	dbRetcode = SQLAllocHandle(SQL_HANDLE_DBC, henv, &hdbc);
-	SQLSetConnectAttr(hdbc, SQL_LOGIN_TIMEOUT, (SQLPOINTER)5, 0);
-	dbRetcode = SQLConnect(hdbc, (SQLWCHAR*)L"g_server_1", SQL_NTS, (SQLWCHAR*)NULL, 0, NULL, 0);
+	//dbRetcode = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &henv);
+	//dbRetcode = SQLSetEnvAttr(henv, SQL_ATTR_ODBC_VERSION, (SQLPOINTER*)SQL_OV_ODBC3, 0);
+	//dbRetcode = SQLAllocHandle(SQL_HANDLE_DBC, henv, &hdbc);
+	//SQLSetConnectAttr(hdbc, SQL_LOGIN_TIMEOUT, (SQLPOINTER)5, 0);
+	//dbRetcode = SQLConnect(hdbc, (SQLWCHAR*)L"g_server_1", SQL_NTS, (SQLWCHAR*)NULL, 0, NULL, 0);
 
-	WSADATA WSAData;
-	WSAStartup(MAKEWORD(2, 0), &WSAData);
-	h_iocp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, 0);
-	g_lSocket = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
-	CreateIoCompletionPort(reinterpret_cast<HANDLE>(g_lSocket), h_iocp, KEY_SERVER, 0);
+	//WSADATA WSAData;
+	//WSAStartup(MAKEWORD(2, 0), &WSAData);
+	//h_iocp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, 0);
+	//g_lSocket = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
+	//CreateIoCompletionPort(reinterpret_cast<HANDLE>(g_lSocket), h_iocp, KEY_SERVER, 0);
 
-	SOCKADDR_IN serverAddr;
-	memset(&serverAddr, 0, sizeof(SOCKADDR_IN));
-	serverAddr.sin_family = AF_INET;
-	serverAddr.sin_port = htons(SERVER_PORT);
-	serverAddr.sin_addr.s_addr = INADDR_ANY;
-	::bind(g_lSocket, (sockaddr*)&serverAddr, sizeof(serverAddr));
-	listen(g_lSocket, 5);
+	//SOCKADDR_IN serverAddr;
+	//memset(&serverAddr, 0, sizeof(SOCKADDR_IN));
+	//serverAddr.sin_family = AF_INET;
+	//serverAddr.sin_port = htons(SERVER_PORT);
+	//serverAddr.sin_addr.s_addr = INADDR_ANY;
+	//::bind(g_lSocket, (sockaddr*)&serverAddr, sizeof(serverAddr));
+	//listen(g_lSocket, 5);
 
-	SOCKET cSocket = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
-	g_accept_over.op_mode = OP_MODE_ACCEPT;
-	g_accept_over.wsa_buf.len = static_cast<int>(cSocket);
-	ZeroMemory(&g_accept_over.wsa_over, sizeof(&g_accept_over.wsa_over));
-	AcceptEx(g_lSocket, cSocket, g_accept_over.iocp_buf, 0, 32, 32, NULL, &g_accept_over.wsa_over);
+	//SOCKET cSocket = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
+	//g_accept_over.op_mode = OP_MODE_ACCEPT;
+	//g_accept_over.wsa_buf.len = static_cast<int>(cSocket);
+	//ZeroMemory(&g_accept_over.wsa_over, sizeof(&g_accept_over.wsa_over));
+	//AcceptEx(g_lSocket, cSocket, g_accept_over.iocp_buf, 0, 32, 32, NULL, &g_accept_over.wsa_over);
 
-	initialize_NPC();
+	//initialize_NPC();
 
-	//thread ai_thread{ npc_ai_thread };
-	thread timer_thread{ time_worker };
-	vector <thread> worker_threads;
-	for (int i = 0; i < 4; ++i) 
-		worker_threads.emplace_back(worker_thread);
-	for (auto& th : worker_threads)
-		th.join();
-	//ai_thread.join();
-	timer_thread.join();
+	////thread ai_thread{ npc_ai_thread };
+	//thread timer_thread{ time_worker };
+	//vector <thread> worker_threads;
+	//for (int i = 0; i < 4; ++i) 
+	//	worker_threads.emplace_back(worker_thread);
+	//for (auto& th : worker_threads)
+	//	th.join();
+	////ai_thread.join();
+	//timer_thread.join();
 
-	SQLCancel(hstmt);
-	SQLFreeHandle(SQL_HANDLE_STMT, hstmt);
-	SQLDisconnect(hdbc);
-	SQLFreeHandle(SQL_HANDLE_DBC, hdbc);
-	SQLFreeHandle(SQL_HANDLE_ENV, henv);
-	closesocket(g_lSocket);
-	WSACleanup();
+	//SQLCancel(hstmt);
+	//SQLFreeHandle(SQL_HANDLE_STMT, hstmt);
+	//SQLDisconnect(hdbc);
+	//SQLFreeHandle(SQL_HANDLE_DBC, hdbc);
+	//SQLFreeHandle(SQL_HANDLE_ENV, henv);
+	//closesocket(g_lSocket);
+	//WSACleanup();
 }

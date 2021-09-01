@@ -14,4 +14,10 @@
 #include <stdio.h>  
 #include <sqlext.h>
 
+extern "C" {
+#include "include/lua.h"
+#include "include/lauxlib.h"
+#include "include/lualib.h"
+}
+
 #include"protocol.h"

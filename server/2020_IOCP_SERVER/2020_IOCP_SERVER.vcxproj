@@ -139,12 +139,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CClient.cpp" />
     <ClCompile Include="CEvent.cpp" />
+    <ClCompile Include="CNPCController.cpp" />
+    <ClCompile Include="CServer.cpp" />
     <ClCompile Include="CTimer.cpp" />
     <ClCompile Include="iocp_server.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CClient.h" />
     <ClInclude Include="CEvent.h" />
+    <ClInclude Include="CNPCController.h" />
+    <ClInclude Include="CServer.h" />
     <ClInclude Include="CTimer.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="include\lauxlib.h" />
