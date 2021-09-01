@@ -1,0 +1,23 @@
+*.exe
+*.ilk
+*.pdb
+*.obj
+*.log
+*.pch
+*.idb
+*.tlog
+*.lastbuildstate
+*.suo
+*.db
+*/.vs
+*/x64
+*/Debug
+*/release
+.vs/
+Debug/
+/packages
+/Release
+/2020_CLIENT/packages.config
+/2020_StressW/2020_StressW/x64/Release
+/2020_CLIENT/Resources/Player - Among Us
+/2020_CLIENT/Resources/PC Computer - Among Us - Player Base.zip
