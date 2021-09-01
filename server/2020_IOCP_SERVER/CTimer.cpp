@@ -116,5 +116,6 @@ void CTimer::send_enter_packet(int to_client, int new_id)
 
 void CTimer::join()
 {
-	std::thread timer_thread{ time_worker };
+	std::thread timer_thread{ &time_worker };
+	timer_thread.join();
 }

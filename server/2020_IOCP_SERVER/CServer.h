@@ -21,5 +21,8 @@ public:
 	virtual ~CServer();
 	void run();
 	void initialize_NPC();
+	void worker_thread();
+	void add_new_client(SOCKET ns);
+	void disconnect_client(int id);
 };
 
