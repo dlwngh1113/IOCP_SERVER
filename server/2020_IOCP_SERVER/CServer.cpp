@@ -165,22 +165,8 @@ void CServer::add_new_client(SOCKET ns)
 
 void CServer::disconnect_client(int id)
 {
-	//for (int i = 0; i < MAX_USER; ++i) {
-	//	if (true == g_clients[i].getUse())
-	//		if (i != id) {
-	//			if (0 != g_clients[i].view_list.count(id)) {
-	//				g_clients[i].view_list.erase(id);
-	//				send_leave_packet(i, id);
-	//			}
-	//		}
-	//}
-	for (auto& i : g_clients[id].view_list)
-	{
-		g_clients[i].vl.lock();
-		g_clients[i].view_list.erase(id);
-		g_clients[i].vl.unlock();
-		g_clients[i].send_leave_packet(id);
-	}
+	for (auto& i : g_clients[id].getViewList())
+		g_clients[i].ErasePlayer(id);
 	g_clients[id].Release();
 }
 

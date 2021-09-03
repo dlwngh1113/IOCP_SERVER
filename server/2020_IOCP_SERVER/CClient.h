@@ -30,6 +30,7 @@ public:
 #pragma region getter
 	short getHP() const;
 	bool getUse() const;
+	std::unordered_set<int>& getViewList();
 #pragma endregion
 
 #pragma region setter
@@ -41,7 +42,9 @@ public:
 
 	void MoveNotify(int objID);
 	void AutoHeal();
+	void StartRecv();
+	void ErasePlayer(int id);
+
 	void send_heal_packet(char* mess);
 	void send_leave_packet(int targetID);
-	void StartRecv();
 };

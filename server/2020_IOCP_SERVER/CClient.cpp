@@ -122,6 +122,14 @@ void CClient::StartRecv()
 	}
 }
 
+void CClient::ErasePlayer(int id)
+{
+	this->vl.lock();
+	this->view_list.erase(id);
+	this->vl.unlock();
+	send_leave_packet(id);
+}
+
 void CClient::send_packet(void* p)
 {
 	unsigned char* packet = reinterpret_cast<unsigned char*>(p);
@@ -146,4 +154,9 @@ short CClient::getHP() const
 bool CClient::getUse() const
 {
 	return this->in_use;
+}
+
+std::unordered_set<int>& CClient::getViewList()
+{
+	return this->view_list;
 }
