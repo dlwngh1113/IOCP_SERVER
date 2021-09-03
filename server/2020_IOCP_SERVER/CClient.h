@@ -24,6 +24,8 @@ class CClient
 
 	int move_time;
 	int atk_time;
+
+	void send_packet(void* p);
 public:
 #pragma region getter
 	short getHP() const;
@@ -32,7 +34,12 @@ public:
 
 #pragma region setter
 	void SetUse(bool b);
+	void SetClient(SOCKET ns);
 #pragma endregion
-	void MoveNotify(int objID);
 	void Init(short x, short y, short level, char* name, int i);
+
+	void MoveNotify(int objID);
+	void AutoHeal();
+	void send_heal_packet(char* mess);
+	void StartRecv();
 };

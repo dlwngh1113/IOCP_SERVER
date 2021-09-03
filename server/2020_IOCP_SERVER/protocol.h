@@ -102,6 +102,7 @@ struct sc_packet_stat_change {
 	short hp;
 	short level;
 	int   exp;
+	char message[MAX_STR_LEN];
 };
 
 

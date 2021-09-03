@@ -129,18 +129,7 @@ void CServer::worker_thread()
 			break;
 		case OP_HEAL:
 		{
-			g_clients[key].c_lock.lock();
-			short maxHp = g_clients[key].level * 70;
-			if (g_clients[key].hp + maxHp * 0.1 >= maxHp)
-				g_clients[key].hp = maxHp;
-			else if (g_clients[key].hp + maxHp * 0.1 < maxHp)
-				g_clients[key].hp += maxHp * 0.1;
-			g_clients[key].c_lock.unlock();
-			add_timer(key, OP_HEAL, system_clock::now() + 5s);
-			char mess[MAX_STR_LEN];
-			sprintf_s(mess, "auto healing...%s", g_clients[key].name);
-			send_chat_packet(key, key, mess);
-			send_stat_change(key);
+			timer->add_timer(key, OP_HEAL, std::chrono::system_clock::now() + std::chrono::seconds(5));
 			delete over_ex;
 		}
 			break;
@@ -161,43 +150,17 @@ void CServer::add_new_client(SOCKET ns)
 	}
 	else {
 		// cout << "New Client [" << i << "] Accepted" << endl;
-		g_clients[i].c_lock.lock();
-		g_clients[i].in_use = true;
-		g_clients[i].m_sock = ns;
-		g_clients[i].name[0] = 0;
-		g_clients[i].c_lock.unlock();
-
-		g_clients[i].m_packet_start = g_clients[i].m_recv_over.iocp_buf;
-		g_clients[i].m_recv_over.op_mode = OP_MODE_RECV;
-		g_clients[i].m_recv_over.wsa_buf.buf
-			= reinterpret_cast<CHAR*>(g_clients[i].m_recv_over.iocp_buf);
-		g_clients[i].m_recv_over.wsa_buf.len = sizeof(g_clients[i].m_recv_over.iocp_buf);
-		ZeroMemory(&g_clients[i].m_recv_over.wsa_over, sizeof(g_clients[i].m_recv_over.wsa_over));
-		g_clients[i].m_recv_start = g_clients[i].m_recv_over.iocp_buf;
-
-		g_clients[i].x = rand() % WORLD_WIDTH;
-		g_clients[i].y = rand() % WORLD_HEIGHT;
+		g_clients[i].SetClient(ns);
 		CreateIoCompletionPort(reinterpret_cast<HANDLE>(ns), h_iocp, i, 0);
-		DWORD flags = 0;
-		int ret;
-		g_clients[i].c_lock.lock();
-		if (true == g_clients[i].in_use) {
-			ret = WSARecv(g_clients[i].m_sock, &g_clients[i].m_recv_over.wsa_buf, 1, NULL,
-				&flags, &g_clients[i].m_recv_over.wsa_over, NULL);
-		}
-		g_clients[i].c_lock.unlock();
-		if (SOCKET_ERROR == ret) {
-			int err_no = WSAGetLastError();
-			if (ERROR_IO_PENDING != err_no)
-				error_display("WSARecv : ", err_no);
-		}
+		g_clients[i].StartRecv();
 	}
+
 	SOCKET cSocket = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
 	g_accept_over.op_mode = OP_MODE_ACCEPT;
 	g_accept_over.wsa_buf.len = static_cast<ULONG> (cSocket);
 	ZeroMemory(&g_accept_over.wsa_over, sizeof(&g_accept_over.wsa_over));
 	AcceptEx(g_lSocket, cSocket, g_accept_over.iocp_buf, 0, 32, 32, NULL, &g_accept_over.wsa_over);
-	add_timer(i, OP_HEAL, system_clock::now() + 5s);
+	timer->add_timer(i, OP_HEAL, std::chrono::system_clock::now() + std::chrono::seconds(5));
 }
 
 void CServer::disconnect_client(int id)
