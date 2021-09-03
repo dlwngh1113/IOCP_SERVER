@@ -25,5 +25,14 @@ class CClient
 	int move_time;
 	int atk_time;
 public:
+#pragma region getter
+	short getHP() const;
+	bool getUse() const;
+#pragma endregion
+
+#pragma region setter
 	void SetUse(bool b);
+#pragma endregion
+	void MoveNotify(int objID);
+	void Init(short x, short y, short level, char* name, int i);
 };

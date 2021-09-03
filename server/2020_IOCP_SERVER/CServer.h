@@ -2,9 +2,10 @@
 #include"framework.h"
 #include"CClient.h"
 #include"CTimer.h"
+#include"CNPCController.h"
 class CServer
 {
-	CClient g_clients[MAX_USER + NUM_NPC];
+	CClient* g_clients;
 	HANDLE		h_iocp;
 
 	SOCKET g_lSocket;
@@ -15,7 +16,10 @@ class CServer
 	SQLHSTMT hstmt = 0;
 	SQLRETURN dbRetcode;
 
+	std::mutex id_lock;
+
 	CTimer* timer;
+	CNPCController* npcController;
 public:
 	CServer();
 	virtual ~CServer();
@@ -24,5 +28,6 @@ public:
 	void worker_thread();
 	void add_new_client(SOCKET ns);
 	void disconnect_client(int id);
+	void process_recv(int id, DWORD iosize);
 };
 

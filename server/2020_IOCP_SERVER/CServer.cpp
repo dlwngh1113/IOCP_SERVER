@@ -2,19 +2,23 @@
 
 CServer::CServer()
 {
+	g_clients = new CClient[MAX_USER + NUM_NPC];
 	timer = new CTimer();
+	npcController = new CNPCController();
 }
 
 CServer::~CServer()
 {
 	delete timer;
+	delete npcController;
+	delete[] g_clients;
 }
 
 void CServer::run()
 {
 	std::wcout.imbue(std::locale("korean"));
-	for (auto& cl : g_clients)
-		cl.SetUse(false);
+	for (int i = 0; i < MAX_USER + NUM_NPC; ++i)
+		g_clients[i].SetUse(false);
 
 	dbRetcode = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &henv);
 	dbRetcode = SQLSetEnvAttr(henv, SQL_ATTR_ODBC_VERSION, (SQLPOINTER*)SQL_OV_ODBC3, 0);
@@ -48,7 +52,7 @@ void CServer::run()
 	timer = new CTimer;
 	std::vector <std::thread> worker_threads;
 	for (int i = 0; i < 4; ++i)
-		worker_threads.emplace_back(worker_thread);
+		worker_threads.emplace_back(&worker_thread);
 	for (auto& th : worker_threads)
 		th.join();
 	//ai_thread.join();
@@ -68,30 +72,13 @@ void CServer::initialize_NPC()
 	std::cout << "Initializing NPCs\n";
 	for (int i = MAX_USER; i < MAX_USER + NUM_NPC; ++i)
 	{
-		g_clients[i].x = rand() % WORLD_WIDTH;
-		g_clients[i].y = rand() % WORLD_HEIGHT;
-		g_clients[i].level = rand() % 10 + 1;
-		g_clients[i].hp = g_clients[i].level * 100;
 		char npc_name[50];
 		sprintf_s(npc_name, "N%d", i);
-		strcpy_s(g_clients[i].name, npc_name);
-		g_clients[i].is_active = false;
 
-		lua_State* L = g_clients[i].L = luaL_newstate();
-		luaL_openlibs(L);
-
-		int error = luaL_loadfile(L, "monster.lua");
-		error = lua_pcall(L, 0, 0, 0);
-
-		lua_getglobal(L, "set_uid");
-		lua_pushnumber(L, i);
-		lua_pcall(L, 1, 1, 0);
-		// lua_pop(L, 1);// eliminate set_uid from stack after call
-
-		lua_register(L, "API_SendEnterMessage", API_SendEnterMessage);
-		lua_register(L, "API_SendLeaveMessage", API_SendLeaveMessage);
-		lua_register(L, "API_get_x", API_get_x);
-		lua_register(L, "API_get_y", API_get_y);
+		g_clients->Init(rand() % WORLD_WIDTH,
+						rand() % WORLD_HEIGHT,
+						rand() % 10 + 1,
+						npc_name, i);
 	}
 	std::cout << "NPC initialize finished.\n";
 }
@@ -132,16 +119,12 @@ void CServer::worker_thread()
 			delete over_ex;
 			break;
 		case OP_RANDOM_MOVE:
-			if (g_clients[key].hp > 0)
-				random_move_npc(key);
+			if (g_clients[key].getHP() > 0)
+				npcController->random_move_npc(key);
 			delete over_ex;
 			break;
 		case OP_PLAYER_MOVE_NOTIFY:
-			g_clients[key].lua_l.lock();
-			lua_getglobal(g_clients[key].L, "event_player_move");
-			lua_pushnumber(g_clients[key].L, over_ex->object_id);
-			lua_pcall(g_clients[key].L, 1, 1, 0);
-			g_clients[key].lua_l.unlock();
+			g_clients[key].MoveNotify(over_ex->object_id);
 			delete over_ex;
 			break;
 		case OP_HEAL:
@@ -170,10 +153,10 @@ void CServer::add_new_client(SOCKET ns)
 	int i;
 	id_lock.lock();
 	for (i = 0; i < MAX_USER; ++i)
-		if (false == g_clients[i].in_use) break;
+		if (false == g_clients[i].getUse()) break;
 	id_lock.unlock();
 	if (MAX_USER == i) {
-		cout << "Max user limit exceeded.\n";
+		std::cout << "Max user limit exceeded.\n";
 		closesocket(ns);
 	}
 	else {
@@ -220,7 +203,7 @@ void CServer::add_new_client(SOCKET ns)
 void CServer::disconnect_client(int id)
 {
 	for (int i = 0; i < MAX_USER; ++i) {
-		if (true == g_clients[i].in_use)
+		if (true == g_clients[i].getUse())
 			if (i != id) {
 				if (0 != g_clients[i].view_list.count(id)) {
 					g_clients[i].view_list.erase(id);
@@ -234,5 +217,40 @@ void CServer::disconnect_client(int id)
 	g_clients[id].view_list.clear();
 	closesocket(g_clients[id].m_sock);
 	g_clients[id].m_sock = 0;
+	g_clients[id].c_lock.unlock();
+}
+
+void CServer::process_recv(int id, DWORD iosize)
+{
+	unsigned char p_size = g_clients[id].m_packet_start[0];
+	unsigned char* next_recv_ptr = g_clients[id].m_recv_start + iosize;
+	while (p_size <= next_recv_ptr - g_clients[id].m_packet_start) {
+		process_packet(id);
+		g_clients[id].m_packet_start += p_size;
+		if (g_clients[id].m_packet_start < next_recv_ptr)
+			p_size = g_clients[id].m_packet_start[0];
+		else break;
+	}
+
+	long long left_data = next_recv_ptr - g_clients[id].m_packet_start;
+
+	if ((MAX_BUFFER - (next_recv_ptr - g_clients[id].m_recv_over.iocp_buf))
+		< MIN_BUFF_SIZE) {
+		memcpy(g_clients[id].m_recv_over.iocp_buf,
+			g_clients[id].m_packet_start, left_data);
+		g_clients[id].m_packet_start = g_clients[id].m_recv_over.iocp_buf;
+		next_recv_ptr = g_clients[id].m_packet_start + left_data;
+	}
+	DWORD recv_flag = 0;
+	g_clients[id].m_recv_start = next_recv_ptr;
+	g_clients[id].m_recv_over.wsa_buf.buf = reinterpret_cast<CHAR*>(next_recv_ptr);
+	g_clients[id].m_recv_over.wsa_buf.len = MAX_BUFFER -
+		static_cast<int>(next_recv_ptr - g_clients[id].m_recv_over.iocp_buf);
+
+	g_clients[id].c_lock.lock();
+	if (true == g_clients[id].in_use) {
+		WSARecv(g_clients[id].m_sock, &g_clients[id].m_recv_over.wsa_buf,
+			1, NULL, &recv_flag, &g_clients[id].m_recv_over.wsa_over, NULL);
+	}
 	g_clients[id].c_lock.unlock();
 }
