@@ -37,9 +37,11 @@ public:
 	void SetClient(SOCKET ns);
 #pragma endregion
 	void Init(short x, short y, short level, char* name, int i);
+	void Release();
 
 	void MoveNotify(int objID);
 	void AutoHeal();
 	void send_heal_packet(char* mess);
+	void send_leave_packet(int targetID);
 	void StartRecv();
 };

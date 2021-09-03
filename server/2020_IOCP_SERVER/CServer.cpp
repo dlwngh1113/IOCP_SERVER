@@ -153,6 +153,7 @@ void CServer::add_new_client(SOCKET ns)
 		g_clients[i].SetClient(ns);
 		CreateIoCompletionPort(reinterpret_cast<HANDLE>(ns), h_iocp, i, 0);
 		g_clients[i].StartRecv();
+		timer->add_timer(i, OP_HEAL, std::chrono::system_clock::now() + std::chrono::seconds(5));
 	}
 
 	SOCKET cSocket = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
@@ -160,27 +161,27 @@ void CServer::add_new_client(SOCKET ns)
 	g_accept_over.wsa_buf.len = static_cast<ULONG> (cSocket);
 	ZeroMemory(&g_accept_over.wsa_over, sizeof(&g_accept_over.wsa_over));
 	AcceptEx(g_lSocket, cSocket, g_accept_over.iocp_buf, 0, 32, 32, NULL, &g_accept_over.wsa_over);
-	timer->add_timer(i, OP_HEAL, std::chrono::system_clock::now() + std::chrono::seconds(5));
 }
 
 void CServer::disconnect_client(int id)
 {
-	for (int i = 0; i < MAX_USER; ++i) {
-		if (true == g_clients[i].getUse())
-			if (i != id) {
-				if (0 != g_clients[i].view_list.count(id)) {
-					g_clients[i].view_list.erase(id);
-					send_leave_packet(i, id);
-				}
-			}
+	//for (int i = 0; i < MAX_USER; ++i) {
+	//	if (true == g_clients[i].getUse())
+	//		if (i != id) {
+	//			if (0 != g_clients[i].view_list.count(id)) {
+	//				g_clients[i].view_list.erase(id);
+	//				send_leave_packet(i, id);
+	//			}
+	//		}
+	//}
+	for (auto& i : g_clients[id].view_list)
+	{
+		g_clients[i].vl.lock();
+		g_clients[i].view_list.erase(id);
+		g_clients[i].vl.unlock();
+		g_clients[i].send_leave_packet(id);
 	}
-	g_clients[id].c_lock.lock();
-	set_userdata(id, false);
-	g_clients[id].in_use = false;
-	g_clients[id].view_list.clear();
-	closesocket(g_clients[id].m_sock);
-	g_clients[id].m_sock = 0;
-	g_clients[id].c_lock.unlock();
+	g_clients[id].Release();
 }
 
 void CServer::process_recv(int id, DWORD iosize)

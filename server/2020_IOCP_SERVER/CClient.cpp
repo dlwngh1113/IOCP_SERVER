@@ -59,6 +59,17 @@ void CClient::Init(short x, short y, short level, char* name, int i)
 	lua_register(L, "API_get_y", API_get_y);
 }
 
+void CClient::Release()
+{
+	this->c_lock.lock();
+	set_userdata(id, false);
+	this->in_use = false;
+	this->view_list.clear();
+	closesocket(this->m_sock);
+	this->m_sock = 0;
+	this->c_lock.unlock();
+}
+
 void CClient::AutoHeal()
 {
 	this->c_lock.lock();
@@ -82,6 +93,15 @@ void CClient::send_heal_packet(char* mess)
 	p.type = SC_PACKET_STAT_CHANGE;
 	strcpy_s(p.message, mess);
 	p.size = sizeof(p);
+	send_packet(&p);
+}
+
+void CClient::send_leave_packet(int targetID)
+{
+	sc_packet_leave p;
+	p.id = targetID;
+	p.size = sizeof(p);
+	p.type = SC_PACKET_LEAVE;
 	send_packet(&p);
 }
 
