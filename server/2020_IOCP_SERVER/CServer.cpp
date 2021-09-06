@@ -172,35 +172,198 @@ void CServer::disconnect_client(int id)
 
 void CServer::process_recv(int id, DWORD iosize)
 {
-	unsigned char p_size = g_clients[id].m_packet_start[0];
-	unsigned char* next_recv_ptr = g_clients[id].m_recv_start + iosize;
-	while (p_size <= next_recv_ptr - g_clients[id].m_packet_start) {
+	unsigned char* packet_start = g_clients[id].getPacketStart();
+	unsigned char* next_recv_ptr = g_clients[id].getRecvStart() + iosize;
+	unsigned char p_size = packet_start[0];
+	while (p_size <= next_recv_ptr - packet_start) {
 		process_packet(id);
-		g_clients[id].m_packet_start += p_size;
-		if (g_clients[id].m_packet_start < next_recv_ptr)
-			p_size = g_clients[id].m_packet_start[0];
+		packet_start += p_size;
+		if (packet_start < next_recv_ptr)
+			p_size = packet_start[0];
 		else break;
 	}
 
-	long long left_data = next_recv_ptr - g_clients[id].m_packet_start;
+	long long left_data = next_recv_ptr - packet_start;
 
-	if ((MAX_BUFFER - (next_recv_ptr - g_clients[id].m_recv_over.iocp_buf))
-		< MIN_BUFF_SIZE) {
-		memcpy(g_clients[id].m_recv_over.iocp_buf,
-			g_clients[id].m_packet_start, left_data);
-		g_clients[id].m_packet_start = g_clients[id].m_recv_over.iocp_buf;
-		next_recv_ptr = g_clients[id].m_packet_start + left_data;
-	}
-	DWORD recv_flag = 0;
-	g_clients[id].m_recv_start = next_recv_ptr;
-	g_clients[id].m_recv_over.wsa_buf.buf = reinterpret_cast<CHAR*>(next_recv_ptr);
-	g_clients[id].m_recv_over.wsa_buf.len = MAX_BUFFER -
-		static_cast<int>(next_recv_ptr - g_clients[id].m_recv_over.iocp_buf);
+	g_clients[id].IncreaseBuffer(iosize, left_data);
+}
 
-	g_clients[id].c_lock.lock();
-	if (true == g_clients[id].in_use) {
-		WSARecv(g_clients[id].m_sock, &g_clients[id].m_recv_over.wsa_buf,
-			1, NULL, &recv_flag, &g_clients[id].m_recv_over.wsa_over, NULL);
+void CServer::process_packet(int id)
+{
+	char p_type = g_clients[id].getPacketType();
+	switch (p_type) {
+	case CS_LOGIN:
+	{
+		cs_packet_login* p = reinterpret_cast<cs_packet_login*>(g_clients[id].m_packet_start);
+
+		strcpy_s(g_clients[id].name, p->name);
+		for (int i = 0; i < MAX_USER; ++i) {
+			if (g_clients[i].in_use && (i != id))
+				if (strcmp(g_clients[i].name, g_clients[id].name) != 0);
+				else {
+					send_login_fail(id);
+					return;
+				}
+		}
+		set_userdata(id, true);
+
+		if (dbRetcode != SQL_SUCCESS && dbRetcode != SQL_SUCCESS_WITH_INFO)
+			get_userdata(p, id);
+
+		send_login_ok(id);
+		for (int i = 0; i < MAX_USER; ++i)
+			if (true == g_clients[i].in_use)
+				if (id != i) {
+					if (false == is_near(i, id)) continue;
+					if (0 == g_clients[i].view_list.count(id)) {
+						g_clients[id].vl.lock();
+						g_clients[i].view_list.insert(id);
+						send_enter_packet(i, id);
+						g_clients[id].vl.unlock();
+					}
+					if (0 == g_clients[id].view_list.count(i)) {
+						g_clients[id].vl.lock();
+						g_clients[id].view_list.insert(i);
+						send_enter_packet(id, i);
+						g_clients[id].vl.unlock();
+					}
+				}
+		for (int i = MAX_USER; i < MAX_USER + NUM_NPC; ++i) {
+			if (false == is_near(id, i)) continue;
+			g_clients[id].vl.lock();
+			g_clients[id].view_list.insert(i);
+			send_enter_packet(id, i);
+			wake_up_npc(i);
+			g_clients[id].vl.unlock();
+		}
+		break;
 	}
-	g_clients[id].c_lock.unlock();
+	case CS_MOVE: {
+		cs_packet_move* p = reinterpret_cast<cs_packet_move*>(g_clients[id].m_packet_start);
+		if (g_clients[id].move_time < p->move_time) {
+			g_clients[id].move_time = p->move_time;
+			process_move(id, p->direction);
+		}
+	}
+				break;
+	case CS_LOGOUT:
+	{
+		disconnect_client(id);
+	}
+	break;
+	case CS_ATTACK:
+	{
+		cs_packet_attack* p = reinterpret_cast<cs_packet_attack*>(g_clients[id].m_packet_start);
+		if (g_clients[id].atk_time < p->atk_time) {
+			g_clients[id].atk_time = p->atk_time;
+			process_attack(id);
+		}
+	}
+	break;
+	case CS_TELEPORT:
+	{
+		cs_packet_teleport* p = reinterpret_cast<cs_packet_teleport*>(g_clients[id].m_packet_start);
+		g_clients[id].x = p->x;
+		g_clients[id].y = p->y;
+	}
+	break;
+	default: cout << "Unknown Packet type [" << p_type << "] from Client [" << id << "]\n";
+		while (true);
+	}
+}
+
+void CServer::process_move(int id, char dir)
+{
+	short y = g_clients[id].y;
+	short x = g_clients[id].x;
+	switch (dir) {
+	case MV_UP: if (y > 0) y--; break;
+	case MV_DOWN: if (y < (WORLD_HEIGHT - 1)) y++; break;
+	case MV_LEFT: if (x > 0) x--; break;
+	case MV_RIGHT: if (x < (WORLD_WIDTH - 1)) x++; break;
+	default: std::cout << "Unknown Direction in CS_MOVE packet.\n";
+		while (true);
+	}
+	std::unordered_set <int> old_viewlist = g_clients[id].getViewList();
+
+	g_clients[id].x = x;
+	g_clients[id].y = y;
+
+	send_move_packet(id, id);
+
+	std::unordered_set <int> new_viewlist;
+	for (int i = 0; i < MAX_USER; ++i) {
+		if (id == i) continue;
+		if (false == g_clients[i].getUse()) continue;
+		if (true == is_near(id, i)) new_viewlist.insert(i);
+	}
+
+	for (int i = MAX_USER; i < MAX_USER + NUM_NPC; ++i) {
+		if (true == is_near(id, i)) {
+			new_viewlist.insert(i);
+			wake_up_npc(i);
+		}
+	}
+
+	// 시야에 들어온 객체 처리
+	for (int ob : new_viewlist) {
+		if (0 == old_viewlist.count(ob)) {
+			g_clients[id].vl.lock();
+			g_clients[id].view_list.insert(ob);
+			send_enter_packet(id, ob);
+			g_clients[id].vl.unlock();
+
+			if (false == is_npc(ob)) {
+				if (0 == g_clients[ob].view_list.count(id)) {
+					g_clients[ob].vl.lock();
+					g_clients[ob].view_list.insert(id);
+					send_enter_packet(ob, id);
+					g_clients[ob].vl.unlock();
+				}
+				else {
+					send_move_packet(ob, id);
+				}
+			}
+		}
+		else {  // 이전에도 시야에 있었고, 이동후에도 시야에 있는 객체
+			if (false == is_npc(ob)) {
+				if (0 != g_clients[ob].view_list.count(id)) {
+					send_move_packet(ob, id);
+				}
+				else
+				{
+					g_clients[ob].vl.lock();
+					g_clients[ob].view_list.insert(id);
+					send_enter_packet(ob, id);
+					g_clients[ob].vl.unlock();
+				}
+			}
+		}
+	}
+	for (int ob : old_viewlist) {
+		if (0 == new_viewlist.count(ob)) {
+			g_clients[id].vl.lock();
+			g_clients[id].view_list.erase(ob);
+			send_leave_packet(id, ob);
+			g_clients[id].vl.unlock();
+			if (false == is_npc(ob)) {
+				if (0 != g_clients[ob].view_list.count(id)) {
+					g_clients[ob].vl.lock();
+					g_clients[ob].view_list.erase(id);
+					send_leave_packet(ob, id);
+					g_clients[ob].vl.unlock();
+				}
+			}
+		}
+	}
+
+	if (false == is_npc(id)) {
+		for (auto& npc : new_viewlist) {
+			if (false == is_npc(npc)) continue;
+			OVER_EX* ex_over = new OVER_EX;
+			ex_over->object_id = id;
+			ex_over->op_mode = OP_PLAYER_MOVE_NOTIFY;
+			PostQueuedCompletionStatus(h_iocp, 1, npc, &ex_over->wsa_over);
+		}
+	}
 }

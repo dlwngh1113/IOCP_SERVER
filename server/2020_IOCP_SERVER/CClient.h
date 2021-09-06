@@ -31,6 +31,9 @@ public:
 	short getHP() const;
 	bool getUse() const;
 	std::unordered_set<int>& getViewList();
+	unsigned char* getPacketStart();
+	unsigned char* getRecvStart();
+	char getPacketType() const;
 #pragma endregion
 
 #pragma region setter
@@ -44,6 +47,8 @@ public:
 	void AutoHeal();
 	void StartRecv();
 	void ErasePlayer(int id);
+
+	void IncreaseBuffer(DWORD iosize, long long left_data);
 
 	void send_heal_packet(char* mess);
 	void send_leave_packet(int targetID);

@@ -130,6 +130,30 @@ void CClient::ErasePlayer(int id)
 	send_leave_packet(id);
 }
 
+void CClient::IncreaseBuffer(DWORD iosize, long long left_data)
+{
+	unsigned char* next_recv_ptr = m_recv_start + iosize;
+	if ((MAX_BUFFER - (next_recv_ptr - m_recv_over.iocp_buf))
+		< MIN_BUFF_SIZE) {
+		memcpy(m_recv_over.iocp_buf,
+			m_packet_start, left_data);
+		m_packet_start = m_recv_over.iocp_buf;
+		next_recv_ptr = m_packet_start + left_data;
+	}
+	DWORD recv_flag = 0;
+	m_recv_start = next_recv_ptr;
+	m_recv_over.wsa_buf.buf = reinterpret_cast<CHAR*>(next_recv_ptr);
+	m_recv_over.wsa_buf.len = MAX_BUFFER -
+		static_cast<int>(next_recv_ptr - m_recv_over.iocp_buf);
+
+	c_lock.lock();
+	if (true == in_use) {
+		WSARecv(m_sock, &m_recv_over.wsa_buf,
+			1, NULL, &recv_flag, &m_recv_over.wsa_over, NULL);
+	}
+	c_lock.unlock();
+}
+
 void CClient::send_packet(void* p)
 {
 	unsigned char* packet = reinterpret_cast<unsigned char*>(p);
@@ -159,4 +183,19 @@ bool CClient::getUse() const
 std::unordered_set<int>& CClient::getViewList()
 {
 	return this->view_list;
+}
+
+unsigned char* CClient::getPacketStart()
+{
+	return m_packet_start;
+}
+
+unsigned char* CClient::getRecvStart()
+{
+	return m_recv_start;
+}
+
+char CClient::getPacketType() const
+{
+	return m_packet_start[1];
 }
