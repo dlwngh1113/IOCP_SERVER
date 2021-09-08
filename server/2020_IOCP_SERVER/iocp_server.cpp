@@ -257,20 +257,20 @@ void send_move_packet(int to_client, int id)
 	send_packet(to_client, &p);
 }
 
-//void send_enter_packet(int to_client, int new_id)
-//{
-//	sc_packet_enter p;
-//	p.id = new_id;
-//	p.size = sizeof(p);
-//	p.type = SC_PACKET_ENTER;
-//	p.x = g_clients[new_id].x;
-//	p.y = g_clients[new_id].y;
-//	g_clients[new_id].c_lock.lock();
-//	strcpy_s(p.name, g_clients[new_id].name);
-//	g_clients[new_id].c_lock.unlock();
-//	p.o_type = 0;
-//	send_packet(to_client, &p);
-//}
+void send_enter_packet(int to_client, int new_id)
+{
+	sc_packet_enter p;
+	p.id = new_id;
+	p.size = sizeof(p);
+	p.type = SC_PACKET_ENTER;
+	p.x = g_clients[new_id].x;
+	p.y = g_clients[new_id].y;
+	g_clients[new_id].c_lock.lock();
+	strcpy_s(p.name, g_clients[new_id].name);
+	g_clients[new_id].c_lock.unlock();
+	p.o_type = 0;
+	send_packet(to_client, &p);
+}
 
 void send_leave_packet(int to_client, int new_id)
 {

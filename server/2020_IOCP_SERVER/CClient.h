@@ -4,7 +4,8 @@
 class CClient
 {
 	std::mutex c_lock;
-	char name[MAX_ID_LEN];
+	int id;
+	char* name;
 	short level;
 	short hp;
 	short x, y;
@@ -30,15 +31,20 @@ public:
 #pragma region getter
 	short getHP() const;
 	bool getUse() const;
+	char* getName();
 	std::unordered_set<int>& getViewList();
 	unsigned char* getPacketStart();
 	unsigned char* getRecvStart();
 	char getPacketType() const;
+	short getX() const;
+	short getY() const;
 #pragma endregion
 
 #pragma region setter
 	void SetUse(bool b);
-	void SetClient(SOCKET ns);
+	void SetClient(int id, SOCKET ns);
+
+	void SetPosition(short x, short y);
 #pragma endregion
 	CClient();
 	virtual ~CClient();
@@ -50,9 +56,13 @@ public:
 	void AutoHeal();
 	void StartRecv();
 	void ErasePlayer(int id);
+	void EnterPlayer(CClient& other);
 
 	void IncreaseBuffer(DWORD iosize, long long left_data);
 
+	void send_login_fail();
+	void send_login_ok();
 	void send_heal_packet(char* mess);
 	void send_leave_packet(int targetID);
+	void send_enter_packet(CClient& other);
 };

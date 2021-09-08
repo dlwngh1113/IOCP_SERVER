@@ -150,7 +150,7 @@ void CServer::add_new_client(SOCKET ns)
 	}
 	else {
 		// cout << "New Client [" << i << "] Accepted" << endl;
-		g_clients[i].SetClient(ns);
+		g_clients[i].SetClient(i, ns);
 		CreateIoCompletionPort(reinterpret_cast<HANDLE>(ns), h_iocp, i, 0);
 		g_clients[i].StartRecv();
 		timer->add_timer(i, OP_HEAL, std::chrono::system_clock::now() + std::chrono::seconds(5));
@@ -168,6 +168,28 @@ void CServer::disconnect_client(int id)
 	for (auto& i : g_clients[id].getViewList())
 		g_clients[i].ErasePlayer(id);
 	g_clients[id].Release();
+}
+
+void CServer::wake_up_npc(int id)
+{
+	bool b = false;
+	if (true == g_clients[id].is_active.compare_exchange_strong(b, true))
+	{
+		timer->add_timer(id, OP_RANDOM_MOVE, std::chrono::system_clock::now() + std::chrono::seconds(1));
+	}
+}
+
+bool CServer::is_near(int p1, int p2)
+{
+	int dist = (g_clients[p1].x - g_clients[p2].x) * (g_clients[p1].x - g_clients[p2].x);
+	dist += (g_clients[p1].y - g_clients[p2].y) * (g_clients[p1].y - g_clients[p2].y);
+
+	return dist <= VIEW_LIMIT * VIEW_LIMIT;
+}
+
+bool CServer::is_npc(int id)
+{
+	return id >= MAX_USER;
 }
 
 void CServer::process_recv(int id, DWORD iosize)
@@ -196,12 +218,12 @@ void CServer::process_packet(int id)
 	{
 		cs_packet_login* p = reinterpret_cast<cs_packet_login*>(g_clients[id].getPacketStart());
 
-		strcpy_s(g_clients[id].name, p->name);
+		strcpy_s(g_clients[id].getName(), MAX_ID_LEN, p->name);
 		for (int i = 0; i < MAX_USER; ++i) {
-			if (g_clients[i].in_use && (i != id))
-				if (strcmp(g_clients[i].name, g_clients[id].name) != 0);
+			if (g_clients[i].getUse() && (i != id))
+				if (strcmp(g_clients[i].getName(), g_clients[id].getName()) != 0);
 				else {
-					send_login_fail(id);
+					g_clients[id].send_login_fail();
 					return;
 				}
 		}
@@ -210,36 +232,25 @@ void CServer::process_packet(int id)
 		if (dbRetcode != SQL_SUCCESS && dbRetcode != SQL_SUCCESS_WITH_INFO)
 			get_userdata(p, id);
 
-		send_login_ok(id);
+		g_clients[id].send_login_ok();
 		for (int i = 0; i < MAX_USER; ++i)
-			if (true == g_clients[i].in_use)
+			if (true == g_clients[i].getUse())
 				if (id != i) {
 					if (false == is_near(i, id)) continue;
-					if (0 == g_clients[i].view_list.count(id)) {
-						g_clients[id].vl.lock();
-						g_clients[i].view_list.insert(id);
-						send_enter_packet(i, id);
-						g_clients[id].vl.unlock();
-					}
-					if (0 == g_clients[id].view_list.count(i)) {
-						g_clients[id].vl.lock();
-						g_clients[id].view_list.insert(i);
-						send_enter_packet(id, i);
-						g_clients[id].vl.unlock();
-					}
+					if (0 == g_clients[i].getViewList().count(id))
+						g_clients[i].EnterPlayer(g_clients[id]);
+					if (0 == g_clients[id].getViewList().count(i))
+						g_clients[id].EnterPlayer(g_clients[i]);
 				}
 		for (int i = MAX_USER; i < MAX_USER + NUM_NPC; ++i) {
 			if (false == is_near(id, i)) continue;
-			g_clients[id].vl.lock();
-			g_clients[id].view_list.insert(i);
-			send_enter_packet(id, i);
+			g_clients[id].EnterPlayer(g_clients[i]);
 			wake_up_npc(i);
-			g_clients[id].vl.unlock();
 		}
 		break;
 	}
 	case CS_MOVE: {
-		cs_packet_move* p = reinterpret_cast<cs_packet_move*>(g_clients[id].m_packet_start);
+		cs_packet_move* p = reinterpret_cast<cs_packet_move*>(g_clients[id].getPacketStart());
 		if (g_clients[id].move_time < p->move_time) {
 			g_clients[id].move_time = p->move_time;
 			process_move(id, p->direction);
@@ -253,7 +264,7 @@ void CServer::process_packet(int id)
 	break;
 	case CS_ATTACK:
 	{
-		cs_packet_attack* p = reinterpret_cast<cs_packet_attack*>(g_clients[id].m_packet_start);
+		cs_packet_attack* p = reinterpret_cast<cs_packet_attack*>(g_clients[id].getPacketStart());
 		if (g_clients[id].atk_time < p->atk_time) {
 			g_clients[id].atk_time = p->atk_time;
 			process_attack(id);
@@ -262,20 +273,20 @@ void CServer::process_packet(int id)
 	break;
 	case CS_TELEPORT:
 	{
-		cs_packet_teleport* p = reinterpret_cast<cs_packet_teleport*>(g_clients[id].m_packet_start);
+		cs_packet_teleport* p = reinterpret_cast<cs_packet_teleport*>(g_clients[id].getPacketStart());
 		g_clients[id].x = p->x;
 		g_clients[id].y = p->y;
 	}
 	break;
-	default: cout << "Unknown Packet type [" << p_type << "] from Client [" << id << "]\n";
+	default: std::cout << "Unknown Packet type [" << p_type << "] from Client [" << id << "]\n";
 		while (true);
 	}
 }
 
 void CServer::process_move(int id, char dir)
 {
-	short y = g_clients[id].y;
-	short x = g_clients[id].x;
+	short y = g_clients[id].getY();
+	short x = g_clients[id].getX();
 	switch (dir) {
 	case MV_UP: if (y > 0) y--; break;
 	case MV_DOWN: if (y < (WORLD_HEIGHT - 1)) y++; break;
@@ -286,8 +297,7 @@ void CServer::process_move(int id, char dir)
 	}
 	std::unordered_set <int> old_viewlist = g_clients[id].getViewList();
 
-	g_clients[id].x = x;
-	g_clients[id].y = y;
+	g_clients[id].SetPosition(x, y);
 
 	send_move_packet(id, id);
 
@@ -308,17 +318,11 @@ void CServer::process_move(int id, char dir)
 	// 시야에 들어온 객체 처리
 	for (int ob : new_viewlist) {
 		if (0 == old_viewlist.count(ob)) {
-			g_clients[id].vl.lock();
-			g_clients[id].view_list.insert(ob);
-			send_enter_packet(id, ob);
-			g_clients[id].vl.unlock();
+			g_clients[id].EnterPlayer(g_clients[ob]);
 
 			if (false == is_npc(ob)) {
-				if (0 == g_clients[ob].view_list.count(id)) {
-					g_clients[ob].vl.lock();
-					g_clients[ob].view_list.insert(id);
-					send_enter_packet(ob, id);
-					g_clients[ob].vl.unlock();
+				if (0 == g_clients[ob].getViewList().count(id)) {
+					g_clients[ob].EnterPlayer(g_clients[id]);
 				}
 				else {
 					send_move_packet(ob, id);
@@ -327,31 +331,22 @@ void CServer::process_move(int id, char dir)
 		}
 		else {  // 이전에도 시야에 있었고, 이동후에도 시야에 있는 객체
 			if (false == is_npc(ob)) {
-				if (0 != g_clients[ob].view_list.count(id)) {
+				if (0 != g_clients[ob].getViewList().count(id)) {
 					send_move_packet(ob, id);
 				}
 				else
 				{
-					g_clients[ob].vl.lock();
-					g_clients[ob].view_list.insert(id);
-					send_enter_packet(ob, id);
-					g_clients[ob].vl.unlock();
+					g_clients[ob].EnterPlayer(g_clients[id]);
 				}
 			}
 		}
 	}
 	for (int ob : old_viewlist) {
 		if (0 == new_viewlist.count(ob)) {
-			g_clients[id].vl.lock();
-			g_clients[id].view_list.erase(ob);
-			send_leave_packet(id, ob);
-			g_clients[id].vl.unlock();
+			g_clients[id].ErasePlayer(ob);
 			if (false == is_npc(ob)) {
-				if (0 != g_clients[ob].view_list.count(id)) {
-					g_clients[ob].vl.lock();
-					g_clients[ob].view_list.erase(id);
-					send_leave_packet(ob, id);
-					g_clients[ob].vl.unlock();
+				if (0 != g_clients[ob].getViewList().count(id)) {
+					g_clients[ob].ErasePlayer(id);
 				}
 			}
 		}

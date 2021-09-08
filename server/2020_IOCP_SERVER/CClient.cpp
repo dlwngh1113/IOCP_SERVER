@@ -5,7 +5,7 @@ void CClient::SetUse(bool b)
 	in_use = b;
 }
 
-void CClient::SetClient(SOCKET ns)
+void CClient::SetClient(int id, SOCKET ns)
 {
 	this->c_lock.lock();
 	this->in_use = true;
@@ -25,13 +25,20 @@ void CClient::SetClient(SOCKET ns)
 	this->y = rand() % WORLD_HEIGHT;
 }
 
+void CClient::SetPosition(short x, short y)
+{
+	this->x = x;
+	this->y = y;
+}
+
 CClient::CClient()
 {
-
+	name = new char[MAX_ID_LEN];
 }
 
 CClient::~CClient()
 {
+	delete[] name;
 }
 
 void CClient::MoveNotify(int objID)
@@ -49,7 +56,7 @@ void CClient::Init(short x, short y, short level, char* name, int i)
 	this->y = y;
 	this->level = level;
 	this->hp = level * 100;
-	strcpy_s(this->name, name);
+	strcpy_s(this->name, MAX_ID_LEN, name);
 
 	this->is_active = false;
 	this->L = luaL_newstate();
@@ -93,6 +100,30 @@ void CClient::AutoHeal()
 	this->c_lock.unlock();
 }
 
+void CClient::send_login_fail()
+{
+	sc_packet_login_fail p;
+	p.id = id;
+	p.size = sizeof(p);
+	p.type = SC_PACKET_LOGIN_OK;
+	strcpy_s(p.message, "another client is using this name");
+	send_packet(&p);
+}
+
+void CClient::send_login_ok()
+{
+	sc_packet_login_ok p;
+	p.exp = exp;
+	p.hp = hp;
+	p.id = id;
+	p.level = level;
+	p.size = sizeof(p);
+	p.type = SC_PACKET_LOGIN_OK;
+	p.x = x;
+	p.y = y;
+	send_packet(&p);
+}
+
 void CClient::send_heal_packet(char* mess)
 {
 	sc_packet_stat_change p;
@@ -111,6 +142,21 @@ void CClient::send_leave_packet(int targetID)
 	p.id = targetID;
 	p.size = sizeof(p);
 	p.type = SC_PACKET_LEAVE;
+	send_packet(&p);
+}
+
+void CClient::send_enter_packet(CClient& other)
+{
+	sc_packet_enter p;
+	p.id = other.id;
+	p.size = sizeof(p);
+	p.type = SC_PACKET_ENTER;
+	p.x = other.x;
+	p.y = other.y;
+	other.c_lock.lock();
+	strcpy_s(p.name, other.name);
+	other.c_lock.unlock();
+	p.o_type = 0;
 	send_packet(&p);
 }
 
@@ -138,6 +184,14 @@ void CClient::ErasePlayer(int id)
 	this->view_list.erase(id);
 	this->vl.unlock();
 	send_leave_packet(id);
+}
+
+void CClient::EnterPlayer(CClient& other)
+{
+	vl.lock();
+	view_list.insert(other.id);
+	send_enter_packet(other);
+	vl.unlock();
 }
 
 void CClient::IncreaseBuffer(DWORD iosize, long long left_data)
@@ -190,6 +244,11 @@ bool CClient::getUse() const
 	return this->in_use;
 }
 
+char* CClient::getName()
+{
+	return name;
+}
+
 std::unordered_set<int>& CClient::getViewList()
 {
 	return this->view_list;
@@ -208,4 +267,14 @@ unsigned char* CClient::getRecvStart()
 char CClient::getPacketType() const
 {
 	return m_packet_start[1];
+}
+
+short CClient::getX() const
+{
+	return x;
+}
+
+short CClient::getY() const
+{
+	return y;
 }
