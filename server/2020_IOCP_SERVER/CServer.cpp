@@ -194,7 +194,7 @@ void CServer::process_packet(int id)
 	switch (p_type) {
 	case CS_LOGIN:
 	{
-		cs_packet_login* p = reinterpret_cast<cs_packet_login*>(g_clients[id].m_packet_start);
+		cs_packet_login* p = reinterpret_cast<cs_packet_login*>(g_clients[id].getPacketStart());
 
 		strcpy_s(g_clients[id].name, p->name);
 		for (int i = 0; i < MAX_USER; ++i) {

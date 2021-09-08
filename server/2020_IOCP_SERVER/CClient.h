@@ -40,6 +40,9 @@ public:
 	void SetUse(bool b);
 	void SetClient(SOCKET ns);
 #pragma endregion
+	CClient();
+	virtual ~CClient();
+
 	void Init(short x, short y, short level, char* name, int i);
 	void Release();
 

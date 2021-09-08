@@ -25,6 +25,15 @@ void CClient::SetClient(SOCKET ns)
 	this->y = rand() % WORLD_HEIGHT;
 }
 
+CClient::CClient()
+{
+
+}
+
+CClient::~CClient()
+{
+}
+
 void CClient::MoveNotify(int objID)
 {
 	this->lua_l.lock();
@@ -118,7 +127,8 @@ void CClient::StartRecv()
 	if (SOCKET_ERROR == ret) {
 		int err_no = WSAGetLastError();
 		if (ERROR_IO_PENDING != err_no)
-			error_display("WSARecv : ", err_no);
+			std::cout << "WSARecv: " << err_no << std::endl;
+			//error_display("WSARecv : ", err_no);
 	}
 }
 
