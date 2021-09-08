@@ -274,8 +274,7 @@ void CServer::process_packet(int id)
 	case CS_TELEPORT:
 	{
 		cs_packet_teleport* p = reinterpret_cast<cs_packet_teleport*>(g_clients[id].getPacketStart());
-		g_clients[id].x = p->x;
-		g_clients[id].y = p->y;
+		g_clients[id].SetPosition(p->x, p->y);
 	}
 	break;
 	default: std::cout << "Unknown Packet type [" << p_type << "] from Client [" << id << "]\n";
@@ -298,8 +297,7 @@ void CServer::process_move(int id, char dir)
 	std::unordered_set <int> old_viewlist = g_clients[id].getViewList();
 
 	g_clients[id].SetPosition(x, y);
-
-	send_move_packet(id, id);
+	g_clients[id].send_move_packet(g_clients[id]);
 
 	std::unordered_set <int> new_viewlist;
 	for (int i = 0; i < MAX_USER; ++i) {
@@ -325,14 +323,14 @@ void CServer::process_move(int id, char dir)
 					g_clients[ob].EnterPlayer(g_clients[id]);
 				}
 				else {
-					send_move_packet(ob, id);
+					g_clients[ob].send_move_packet(g_clients[id]);
 				}
 			}
 		}
 		else {  // 이전에도 시야에 있었고, 이동후에도 시야에 있는 객체
 			if (false == is_npc(ob)) {
 				if (0 != g_clients[ob].getViewList().count(id)) {
-					send_move_packet(ob, id);
+					g_clients[ob].send_move_packet(g_clients[id]);
 				}
 				else
 				{
@@ -361,4 +359,36 @@ void CServer::process_move(int id, char dir)
 			PostQueuedCompletionStatus(h_iocp, 1, npc, &ex_over->wsa_over);
 		}
 	}
+}
+
+void CServer::process_attack(int id)
+{
+	for (auto& i : g_clients[id].getViewList())
+		if (isIn_atkRange(id, i)) {
+			if (is_npc(i)) {
+				g_clients[i].c_lock.lock();
+				g_clients[i].hp -= 100;
+				char mess[MAX_STR_LEN];
+				sprintf_s(mess, "%s had %d damage. %d left",
+					g_clients[i].name, 100, g_clients[i].hp);
+				send_chat_packet(id, id, mess);
+				g_clients[i].c_lock.unlock();
+
+				if (g_clients[i].hp <= 0) {
+					add_timer(i, OP_REVIVAL, system_clock::now() + 30s);
+					g_clients[id].c_lock.lock();
+					send_leave_packet(id, i);
+					g_clients[id].exp += g_clients[i].level * 10;
+					if (g_clients[id].exp > g_clients[id].level * 100) {
+						++g_clients[id].level;
+						g_clients[id].exp -= g_clients[id].level * 100;
+						g_clients[id].hp = g_clients[id].level * 70;
+					}
+					send_stat_change(id);
+					g_clients[id].c_lock.unlock();
+					sprintf_s(mess, "%s has dead, %d exp gain",
+						g_clients[i].name, g_clients[i].level * 10);
+				}
+			}
+		}
 }

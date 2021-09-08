@@ -65,4 +65,5 @@ public:
 	void send_heal_packet(char* mess);
 	void send_leave_packet(int targetID);
 	void send_enter_packet(CClient& other);
+	void send_move_packet(CClient& other);
 };

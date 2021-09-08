@@ -160,6 +160,18 @@ void CClient::send_enter_packet(CClient& other)
 	send_packet(&p);
 }
 
+void CClient::send_move_packet(CClient& other)
+{
+	sc_packet_move p;
+	p.id = id;
+	p.size = sizeof(p);
+	p.type = SC_PACKET_MOVE;
+	p.x = other.x;
+	p.y = other.y;
+	p.move_time = other.move_time;
+	send_packet(&p);
+}
+
 void CClient::StartRecv()
 {
 	DWORD flags = 0;
