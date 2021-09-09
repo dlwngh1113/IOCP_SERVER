@@ -173,7 +173,7 @@ void CServer::disconnect_client(int id)
 void CServer::wake_up_npc(int id)
 {
 	bool b = false;
-	if (true == g_clients[id].is_active.compare_exchange_strong(b, true))
+	if (true == g_clients[id].CompareExchangeStrong(b))
 	{
 		timer->add_timer(id, OP_RANDOM_MOVE, std::chrono::system_clock::now() + std::chrono::seconds(1));
 	}
@@ -181,8 +181,8 @@ void CServer::wake_up_npc(int id)
 
 bool CServer::is_near(int p1, int p2)
 {
-	int dist = (g_clients[p1].x - g_clients[p2].x) * (g_clients[p1].x - g_clients[p2].x);
-	dist += (g_clients[p1].y - g_clients[p2].y) * (g_clients[p1].y - g_clients[p2].y);
+	int dist = (g_clients[p1].getX() - g_clients[p2].getX()) * (g_clients[p1].getX() - g_clients[p2].getX());
+	dist += (g_clients[p1].getY() - g_clients[p2].getY()) * (g_clients[p1].getY() - g_clients[p2].getY());
 
 	return dist <= VIEW_LIMIT * VIEW_LIMIT;
 }
@@ -190,6 +190,14 @@ bool CServer::is_near(int p1, int p2)
 bool CServer::is_npc(int id)
 {
 	return id >= MAX_USER;
+}
+
+bool CServer::isIn_atkRange(int p1, int p2)
+{
+	int dist = (g_clients[p1].getX() - g_clients[p2].getX()) * (g_clients[p1].getX() - g_clients[p2].getX());
+	dist += (g_clients[p1].getY() - g_clients[p2].getY()) * (g_clients[p1].getY() - g_clients[p2].getY());
+
+	return dist <= 1;
 }
 
 void CServer::process_recv(int id, DWORD iosize)
@@ -251,8 +259,8 @@ void CServer::process_packet(int id)
 	}
 	case CS_MOVE: {
 		cs_packet_move* p = reinterpret_cast<cs_packet_move*>(g_clients[id].getPacketStart());
-		if (g_clients[id].move_time < p->move_time) {
-			g_clients[id].move_time = p->move_time;
+		if (g_clients[id].getMoveTime() < p->move_time) {
+			g_clients[id].getMoveTime() = p->move_time;
 			process_move(id, p->direction);
 		}
 	}
@@ -265,8 +273,8 @@ void CServer::process_packet(int id)
 	case CS_ATTACK:
 	{
 		cs_packet_attack* p = reinterpret_cast<cs_packet_attack*>(g_clients[id].getPacketStart());
-		if (g_clients[id].atk_time < p->atk_time) {
-			g_clients[id].atk_time = p->atk_time;
+		if (g_clients[id].getAtktime() < p->atk_time) {
+			g_clients[id].getAtktime() = p->atk_time;
 			process_attack(id);
 		}
 	}
@@ -370,24 +378,14 @@ void CServer::process_attack(int id)
 				g_clients[i].hp -= 100;
 				char mess[MAX_STR_LEN];
 				sprintf_s(mess, "%s had %d damage. %d left",
-					g_clients[i].name, 100, g_clients[i].hp);
+					g_clients[i].getName(), 100, g_clients[i].getHP());
 				send_chat_packet(id, id, mess);
 				g_clients[i].c_lock.unlock();
 
-				if (g_clients[i].hp <= 0) {
-					add_timer(i, OP_REVIVAL, system_clock::now() + 30s);
-					g_clients[id].c_lock.lock();
-					send_leave_packet(id, i);
-					g_clients[id].exp += g_clients[i].level * 10;
-					if (g_clients[id].exp > g_clients[id].level * 100) {
-						++g_clients[id].level;
-						g_clients[id].exp -= g_clients[id].level * 100;
-						g_clients[id].hp = g_clients[id].level * 70;
-					}
-					send_stat_change(id);
-					g_clients[id].c_lock.unlock();
+				if (g_clients[i].getHP() <= 0) {
+					timer->add_timer(i, OP_REVIVAL, std::chrono::system_clock::now() + std::chrono::seconds(30));
 					sprintf_s(mess, "%s has dead, %d exp gain",
-						g_clients[i].name, g_clients[i].level * 10);
+						g_clients[i].getName(), g_clients[i].getLevel() * 10);
 				}
 			}
 		}

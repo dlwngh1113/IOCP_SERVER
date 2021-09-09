@@ -33,6 +33,7 @@ public:
 	
 	bool is_near(int p1, int p2);
 	bool is_npc(int id);
+	bool isIn_atkRange(int p1, int p2);
 
 	void process_recv(int id, DWORD io_size);
 	void process_packet(int id);

@@ -32,7 +32,7 @@ public:
 	short getHP() const;
 	bool getUse() const;
 	char* getName();
-	std::unordered_set<int>& getViewList();
+	short getLevel() const;
 	unsigned char* getPacketStart();
 	unsigned char* getRecvStart();
 	char getPacketType() const;
@@ -46,6 +46,12 @@ public:
 
 	void SetPosition(short x, short y);
 #pragma endregion
+
+#pragma region	ref
+	std::unordered_set<int>& getViewList();
+	int& getAtktime();
+	int& getMoveTime();
+#pragma endregion
 	CClient();
 	virtual ~CClient();
 
@@ -54,6 +60,7 @@ public:
 
 	void MoveNotify(int objID);
 	void AutoHeal();
+	void LevelUp(int targetID, int exp);
 	void StartRecv();
 	void ErasePlayer(int id);
 	void EnterPlayer(CClient& other);
@@ -66,4 +73,7 @@ public:
 	void send_leave_packet(int targetID);
 	void send_enter_packet(CClient& other);
 	void send_move_packet(CClient& other);
+	void send_stat_change();
+
+	bool CompareExchangeStrong(bool b);
 };

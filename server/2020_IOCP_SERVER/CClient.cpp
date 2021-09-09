@@ -100,6 +100,20 @@ void CClient::AutoHeal()
 	this->c_lock.unlock();
 }
 
+void CClient::LevelUp(int targetID, int exp)
+{
+	c_lock.lock();
+	send_leave_packet(targetID);
+	this->exp += exp;
+	if (this->exp > level * 100) {
+		++level;
+		this->exp -= this->level * 100;
+		this->hp = this->level * 70;
+	}
+	send_stat_change();
+	c_lock.unlock();
+}
+
 void CClient::send_login_fail()
 {
 	sc_packet_login_fail p;
@@ -170,6 +184,22 @@ void CClient::send_move_packet(CClient& other)
 	p.y = other.y;
 	p.move_time = other.move_time;
 	send_packet(&p);
+}
+
+void CClient::send_stat_change()
+{
+	sc_packet_stat_change p;
+	p.level = level;
+	p.exp = exp;
+	p.hp = hp;
+	p.type = SC_PACKET_STAT_CHANGE;
+	p.size = sizeof(p);
+	send_packet(&p);
+}
+
+bool CClient::CompareExchangeStrong(bool b)
+{
+	return is_active.compare_exchange_strong(b, true);
 }
 
 void CClient::StartRecv()
@@ -261,9 +291,24 @@ char* CClient::getName()
 	return name;
 }
 
+short CClient::getLevel() const
+{
+	return level;
+}
+
 std::unordered_set<int>& CClient::getViewList()
 {
 	return this->view_list;
+}
+
+int& CClient::getAtktime()
+{
+	return atk_time;
+}
+
+int& CClient::getMoveTime()
+{
+	return move_time;
 }
 
 unsigned char* CClient::getPacketStart()
