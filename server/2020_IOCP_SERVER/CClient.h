@@ -61,6 +61,7 @@ public:
 	void MoveNotify(int objID);
 	void AutoHeal();
 	void LevelUp(int targetID, int exp);
+	void HitByPlayer(char* mess);
 	void StartRecv();
 	void ErasePlayer(int id);
 	void EnterPlayer(CClient& other);

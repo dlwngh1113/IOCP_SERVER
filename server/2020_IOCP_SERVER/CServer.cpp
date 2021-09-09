@@ -235,10 +235,10 @@ void CServer::process_packet(int id)
 					return;
 				}
 		}
-		set_userdata(id, true);
+		//set_userdata(id, true);
 
 		if (dbRetcode != SQL_SUCCESS && dbRetcode != SQL_SUCCESS_WITH_INFO)
-			get_userdata(p, id);
+			//get_userdata(p, id);
 
 		g_clients[id].send_login_ok();
 		for (int i = 0; i < MAX_USER; ++i)
@@ -374,12 +374,8 @@ void CServer::process_attack(int id)
 	for (auto& i : g_clients[id].getViewList())
 		if (isIn_atkRange(id, i)) {
 			if (is_npc(i)) {
-				g_clients[i].c_lock.lock();
-				g_clients[i].hp -= 100;
 				char mess[MAX_STR_LEN];
-				sprintf_s(mess, "%s had %d damage. %d left",
-					g_clients[i].getName(), 100, g_clients[i].getHP());
-				g_clients[i].c_lock.unlock();
+				g_clients[i].HitByPlayer(mess);
 				g_clients[id].send_chat_packet(id, mess);
 
 				if (g_clients[i].getHP() <= 0) {

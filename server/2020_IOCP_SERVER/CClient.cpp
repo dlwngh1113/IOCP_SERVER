@@ -114,6 +114,15 @@ void CClient::LevelUp(int targetID, int exp)
 	c_lock.unlock();
 }
 
+void CClient::HitByPlayer(char* mess)
+{
+	c_lock.lock();
+	hp -= 100;
+	sprintf_s(mess, MAX_STR_LEN, "%s had %d damage. %d left",
+		name, 100, hp);
+	c_lock.unlock();
+}
+
 void CClient::send_login_fail()
 {
 	sc_packet_login_fail p;
