@@ -197,6 +197,16 @@ void CClient::send_stat_change()
 	send_packet(&p);
 }
 
+void CClient::send_chat_packet(int targetID, char* mess)
+{
+		sc_packet_chat p;
+		p.id = targetID;
+		p.size = sizeof(p);
+		p.type = SC_PACKET_CHAT;
+		strcpy_s(p.message, mess);
+		send_packet(&p);
+}
+
 bool CClient::CompareExchangeStrong(bool b)
 {
 	return is_active.compare_exchange_strong(b, true);

@@ -74,6 +74,7 @@ public:
 	void send_enter_packet(CClient& other);
 	void send_move_packet(CClient& other);
 	void send_stat_change();
+	void send_chat_packet(int targetID, char* mess);
 
 	bool CompareExchangeStrong(bool b);
 };

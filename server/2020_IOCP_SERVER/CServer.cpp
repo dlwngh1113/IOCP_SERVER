@@ -379,8 +379,8 @@ void CServer::process_attack(int id)
 				char mess[MAX_STR_LEN];
 				sprintf_s(mess, "%s had %d damage. %d left",
 					g_clients[i].getName(), 100, g_clients[i].getHP());
-				send_chat_packet(id, id, mess);
 				g_clients[i].c_lock.unlock();
+				g_clients[id].send_chat_packet(id, mess);
 
 				if (g_clients[i].getHP() <= 0) {
 					timer->add_timer(i, OP_REVIVAL, std::chrono::system_clock::now() + std::chrono::seconds(30));
