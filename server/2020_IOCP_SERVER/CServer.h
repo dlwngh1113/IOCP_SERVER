@@ -11,11 +11,6 @@ class CServer
 	SOCKET g_lSocket;
 	OVER_EX g_accept_over;
 
-	SQLHENV henv;
-	SQLHDBC hdbc;
-	SQLHSTMT hstmt = 0;
-	SQLRETURN dbRetcode;
-
 	std::mutex id_lock;
 
 	CTimer* timer;

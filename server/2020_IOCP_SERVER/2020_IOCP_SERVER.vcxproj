@@ -140,6 +140,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CClient.cpp" />
+    <ClCompile Include="CDBManager.cpp" />
     <ClCompile Include="CEvent.cpp" />
     <ClCompile Include="CNPCController.cpp" />
     <ClCompile Include="CServer.cpp" />
@@ -148,6 +149,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CClient.h" />
+    <ClInclude Include="CDBManager.h" />
     <ClInclude Include="CEvent.h" />
     <ClInclude Include="CNPCController.h" />
     <ClInclude Include="CServer.h" />
