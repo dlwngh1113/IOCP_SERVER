@@ -32,6 +32,7 @@ public:
 
 	void process_recv(int id, DWORD io_size);
 	void process_packet(int id);
+	void process_login(cs_packet_login* p, int id);
 	void process_move(int id, char dir);
 	void process_attack(int id);
 };

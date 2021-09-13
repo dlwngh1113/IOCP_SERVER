@@ -225,36 +225,7 @@ void CServer::process_packet(int id)
 	case CS_LOGIN:
 	{
 		cs_packet_login* p = reinterpret_cast<cs_packet_login*>(g_clients[id].getPacketStart());
-
-		strcpy_s(g_clients[id].getName(), MAX_ID_LEN, p->name);
-		for (int i = 0; i < MAX_USER; ++i) {
-			if (g_clients[i].getUse() && (i != id))
-				if (strcmp(g_clients[i].getName(), g_clients[id].getName()) != 0);
-				else {
-					g_clients[id].send_login_fail();
-					return;
-				}
-		}
-		set_userdata(id, true);
-
-		if (dbRetcode != SQL_SUCCESS && dbRetcode != SQL_SUCCESS_WITH_INFO)
-			get_userdata(p, id);
-
-		g_clients[id].send_login_ok();
-		for (int i = 0; i < MAX_USER; ++i)
-			if (true == g_clients[i].getUse())
-				if (id != i) {
-					if (false == is_near(i, id)) continue;
-					if (0 == g_clients[i].getViewList().count(id))
-						g_clients[i].EnterPlayer(g_clients[id]);
-					if (0 == g_clients[id].getViewList().count(i))
-						g_clients[id].EnterPlayer(g_clients[i]);
-				}
-		for (int i = MAX_USER; i < MAX_USER + NUM_NPC; ++i) {
-			if (false == is_near(id, i)) continue;
-			g_clients[id].EnterPlayer(g_clients[i]);
-			wake_up_npc(i);
-		}
+		process_login(p, id);
 		break;
 	}
 	case CS_MOVE: {
@@ -287,6 +258,40 @@ void CServer::process_packet(int id)
 	break;
 	default: std::cout << "Unknown Packet type [" << p_type << "] from Client [" << id << "]\n";
 		while (true);
+	}
+}
+
+void CServer::process_login(cs_packet_login* p, int id)
+{
+
+	strcpy_s(g_clients[id].getName(), MAX_ID_LEN, p->name);
+	for (int i = 0; i < MAX_USER; ++i) {
+		if (g_clients[i].getUse() && (i != id))
+			if (strcmp(g_clients[i].getName(), g_clients[id].getName()) != 0);
+			else {
+				g_clients[id].send_login_fail();
+				return;
+			}
+	}
+	set_userdata(id, true);
+
+	if (dbRetcode != SQL_SUCCESS && dbRetcode != SQL_SUCCESS_WITH_INFO)
+		get_userdata(p, id);
+
+	g_clients[id].send_login_ok();
+	for (int i = 0; i < MAX_USER; ++i)
+		if (true == g_clients[i].getUse())
+			if (id != i) {
+				if (false == is_near(i, id)) continue;
+				if (0 == g_clients[i].getViewList().count(id))
+					g_clients[i].EnterPlayer(g_clients[id]);
+				if (0 == g_clients[id].getViewList().count(i))
+					g_clients[id].EnterPlayer(g_clients[i]);
+			}
+	for (int i = MAX_USER; i < MAX_USER + NUM_NPC; ++i) {
+		if (false == is_near(id, i)) continue;
+		g_clients[id].EnterPlayer(g_clients[i]);
+		wake_up_npc(i);
 	}
 }
 
