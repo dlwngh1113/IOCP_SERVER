@@ -142,6 +142,7 @@
     <ClCompile Include="CClient.cpp" />
     <ClCompile Include="CDBManager.cpp" />
     <ClCompile Include="CEvent.cpp" />
+    <ClCompile Include="CGameManager.cpp" />
     <ClCompile Include="CNPCController.cpp" />
     <ClCompile Include="CServer.cpp" />
     <ClCompile Include="CTimer.cpp" />
@@ -151,6 +152,7 @@
     <ClInclude Include="CClient.h" />
     <ClInclude Include="CDBManager.h" />
     <ClInclude Include="CEvent.h" />
+    <ClInclude Include="CGameManager.h" />
     <ClInclude Include="CNPCController.h" />
     <ClInclude Include="CServer.h" />
     <ClInclude Include="CTimer.h" />

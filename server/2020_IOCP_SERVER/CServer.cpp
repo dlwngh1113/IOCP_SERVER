@@ -235,10 +235,10 @@ void CServer::process_packet(int id)
 					return;
 				}
 		}
-		//set_userdata(id, true);
+		set_userdata(id, true);
 
 		if (dbRetcode != SQL_SUCCESS && dbRetcode != SQL_SUCCESS_WITH_INFO)
-			//get_userdata(p, id);
+			get_userdata(p, id);
 
 		g_clients[id].send_login_ok();
 		for (int i = 0; i < MAX_USER; ++i)

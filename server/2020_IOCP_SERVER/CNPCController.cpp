@@ -60,7 +60,7 @@ void CNPCController::random_move_npc(int id)
 		{
 			if (0 < g_clients[pl].view_list.count(id)) {
 				g_clients[pl].view_list.erase(id);
-				send_leave_packet(pl, id);
+				g_clients[pl].send_leave_packet(id);
 			}
 		}
 	}
