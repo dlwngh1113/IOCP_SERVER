@@ -3,6 +3,8 @@
 #include"CClient.h"
 #include"CTimer.h"
 #include"CNPCController.h"
+#include"CDBConnector.h"
+
 class CServer
 {
 	CClient* g_clients;
@@ -15,9 +17,11 @@ class CServer
 
 	CTimer* timer;
 	CNPCController* npcController;
+	CDBConnector* dbConnector;
 public:
 	CServer();
 	virtual ~CServer();
+
 	void run();
 	void initialize_NPC();
 	void worker_thread();

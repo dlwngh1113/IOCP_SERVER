@@ -33,6 +33,7 @@ public:
 	bool getUse() const;
 	char* getName();
 	short getLevel() const;
+	int getExp() const;
 	unsigned char* getPacketStart();
 	unsigned char* getRecvStart();
 	char getPacketType() const;
@@ -43,7 +44,7 @@ public:
 #pragma region setter
 	void SetUse(bool b);
 	void SetClient(int id, SOCKET ns);
-
+	void SetInfo(char* name, short level, short x, short y, int exp, short hp);
 	void SetPosition(short x, short y);
 #pragma endregion
 

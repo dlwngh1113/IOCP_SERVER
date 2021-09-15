@@ -5,13 +5,15 @@ CServer::CServer()
 	g_clients = new CClient[MAX_USER + NUM_NPC];
 	timer = new CTimer();
 	npcController = new CNPCController();
+	dbConnector = new CDBConnector();
 }
 
 CServer::~CServer()
 {
+	delete[] g_clients;
 	delete timer;
 	delete npcController;
-	delete[] g_clients;
+	delete dbConnector;
 }
 
 void CServer::run()
@@ -20,11 +22,7 @@ void CServer::run()
 	for (int i = 0; i < MAX_USER + NUM_NPC; ++i)
 		g_clients[i].SetUse(false);
 
-	dbRetcode = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &henv);
-	dbRetcode = SQLSetEnvAttr(henv, SQL_ATTR_ODBC_VERSION, (SQLPOINTER*)SQL_OV_ODBC3, 0);
-	dbRetcode = SQLAllocHandle(SQL_HANDLE_DBC, henv, &hdbc);
-	SQLSetConnectAttr(hdbc, SQL_LOGIN_TIMEOUT, (SQLPOINTER)5, 0);
-	dbRetcode = SQLConnect(hdbc, (SQLWCHAR*)L"g_server_1", SQL_NTS, (SQLWCHAR*)NULL, 0, NULL, 0);
+	dbConnector->Init();
 
 	WSADATA WSAData;
 	WSAStartup(MAKEWORD(2, 0), &WSAData);
@@ -58,11 +56,7 @@ void CServer::run()
 	//ai_thread.join();
 	timer->join();
 
-	SQLCancel(hstmt);
-	SQLFreeHandle(SQL_HANDLE_STMT, hstmt);
-	SQLDisconnect(hdbc);
-	SQLFreeHandle(SQL_HANDLE_DBC, hdbc);
-	SQLFreeHandle(SQL_HANDLE_ENV, henv);
+	dbConnector->Release();
 	closesocket(g_lSocket);
 	WSACleanup();
 }
@@ -263,7 +257,6 @@ void CServer::process_packet(int id)
 
 void CServer::process_login(cs_packet_login* p, int id)
 {
-
 	strcpy_s(g_clients[id].getName(), MAX_ID_LEN, p->name);
 	for (int i = 0; i < MAX_USER; ++i) {
 		if (g_clients[i].getUse() && (i != id))
@@ -273,10 +266,10 @@ void CServer::process_login(cs_packet_login* p, int id)
 				return;
 			}
 	}
-	set_userdata(id, true);
+	dbConnector->set_userdata(id, true);
 
-	if (dbRetcode != SQL_SUCCESS && dbRetcode != SQL_SUCCESS_WITH_INFO)
-		get_userdata(p, id);
+	if (dbConnector->GetReturnCode() != SQL_SUCCESS && dbConnector->GetReturnCode() != SQL_SUCCESS_WITH_INFO)
+		dbConnector->get_userdata(p, id);
 
 	g_clients[id].send_login_ok();
 	for (int i = 0; i < MAX_USER; ++i)

@@ -36,10 +36,7 @@
     <ClCompile Include="CNPCController.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="CDBManager.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="CGameManager.cpp">
+    <ClCompile Include="CDBConnector.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
@@ -74,10 +71,7 @@
     <ClInclude Include="CNPCController.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="CDBManager.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="CGameManager.h">
+    <ClInclude Include="CDBConnector.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,5 +1,15 @@
 #include "CClient.h"
 
+CClient::CClient()
+{
+	name = new char[MAX_ID_LEN];
+}
+
+CClient::~CClient()
+{
+	delete[] name;
+}
+
 void CClient::SetUse(bool b)
 {
 	in_use = b;
@@ -25,20 +35,23 @@ void CClient::SetClient(int id, SOCKET ns)
 	this->y = rand() % WORLD_HEIGHT;
 }
 
+void CClient::SetInfo(char* name, short level, short x, short y, int exp, short hp)
+{
+	this->c_lock.lock();
+	strcpy_s(this->name, MAX_ID_LEN, name);
+
+	this->level = level;
+	this->x = x;
+	this->y = y;
+	this->exp = exp;
+	this->hp = hp;
+	this->c_lock.unlock();
+}
+
 void CClient::SetPosition(short x, short y)
 {
 	this->x = x;
 	this->y = y;
-}
-
-CClient::CClient()
-{
-	name = new char[MAX_ID_LEN];
-}
-
-CClient::~CClient()
-{
-	delete[] name;
 }
 
 void CClient::MoveNotify(int objID)
@@ -313,6 +326,11 @@ char* CClient::getName()
 short CClient::getLevel() const
 {
 	return level;
+}
+
+int CClient::getExp() const
+{
+	return exp;
 }
 
 std::unordered_set<int>& CClient::getViewList()
