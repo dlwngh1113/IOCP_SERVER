@@ -52,6 +52,7 @@ public:
 	std::unordered_set<int>& getViewList();
 	int& getAtktime();
 	int& getMoveTime();
+	lua_State* getLua();
 #pragma endregion
 	CClient();
 	virtual ~CClient();

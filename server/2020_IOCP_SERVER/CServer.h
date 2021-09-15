@@ -39,5 +39,10 @@ public:
 	void process_login(cs_packet_login* p, int id);
 	void process_move(int id, char dir);
 	void process_attack(int id);
+
+	int API_get_x(lua_State* L);
+	int API_get_y(lua_State* L);
+	int API_SendEnterMessage(lua_State* L);
+	int API_SendLeaveMessage(lua_State* L);
 };
 

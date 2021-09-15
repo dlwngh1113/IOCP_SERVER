@@ -69,10 +69,15 @@ void CServer::initialize_NPC()
 		char npc_name[50];
 		sprintf_s(npc_name, "N%d", i);
 
-		g_clients->Init(rand() % WORLD_WIDTH,
+		g_clients[i].Init(rand() % WORLD_WIDTH,
 						rand() % WORLD_HEIGHT,
 						rand() % 10 + 1,
 						npc_name, i);
+
+		lua_register(g_clients[i].getLua(), "API_SendEnterMessage", API_SendEnterMessage);
+		lua_register(g_clients[i].getLua(), "API_SendLeaveMessage", API_SendLeaveMessage);
+		lua_register(g_clients[i].getLua(), "API_get_x", API_get_x);
+		lua_register(g_clients[i].getLua(), "API_get_y", API_get_y);
 	}
 	std::cout << "NPC initialize finished.\n";
 }
@@ -161,6 +166,7 @@ void CServer::disconnect_client(int id)
 {
 	for (auto& i : g_clients[id].getViewList())
 		g_clients[i].ErasePlayer(id);
+	dbConnector->set_userdata(&g_clients[id], false);
 	g_clients[id].Release();
 }
 
@@ -266,10 +272,10 @@ void CServer::process_login(cs_packet_login* p, int id)
 				return;
 			}
 	}
-	dbConnector->set_userdata(id, true);
+	dbConnector->set_userdata(&g_clients[id], true);
 
 	if (dbConnector->GetReturnCode() != SQL_SUCCESS && dbConnector->GetReturnCode() != SQL_SUCCESS_WITH_INFO)
-		dbConnector->get_userdata(p, id);
+		dbConnector->get_userdata(&g_clients[id], p);
 
 	g_clients[id].send_login_ok();
 	for (int i = 0; i < MAX_USER; ++i)
@@ -383,4 +389,65 @@ void CServer::process_attack(int id)
 				}
 			}
 		}
+}
+
+int CServer::API_get_x(lua_State* L)
+{
+	int user_id = lua_tointeger(L, -1);
+	lua_pop(L, 2);
+	int x = g_clients[user_id].getX();
+	lua_pushnumber(L, x);
+	return 1;
+}
+
+int CServer::API_get_y(lua_State* L)
+{
+	int user_id = lua_tointeger(L, -1);
+	lua_pop(L, 2);
+	int y = g_clients[user_id].getY();
+	lua_pushnumber(L, y);
+	return 1;
+}
+
+int CServer::API_SendEnterMessage(lua_State* L)
+{
+	int my_id = (int)lua_tointeger(L, -3);
+	int user_id = (int)lua_tointeger(L, -2);
+	char* mess = (char*)lua_tostring(L, -1);
+
+	lua_pop(L, 3);
+
+	if (std::chrono::system_clock::now().time_since_epoch().count() > g_clients[my_id].getAtktime())
+	{
+		g_clients[my_id].atk_time = system_clock::now().time_since_epoch().count();
+		g_clients[user_id].hp -= 10;
+
+		if (g_clients[user_id].getHP() <= 0) {
+			g_clients[user_id].SetInfo(g_clients[user_id].getName(),
+				g_clients[user_id].getLevel(),
+				0, 0, g_clients[user_id].getExp() / 2,
+				g_clients[user_id].getLevel() * 70);
+		}
+
+		g_clients[user_id].send_stat_change();
+		char tmp[MAX_STR_LEN];
+		sprintf_s(tmp, "You hit by id - %s", g_clients[my_id].getName());
+		g_clients[user_id].send_chat_packet(user_id, tmp);
+	}
+
+	g_clients[user_id].send_chat_packet(my_id, mess);
+	return 0;
+}
+
+int CServer::API_SendLeaveMessage(lua_State* L)
+{
+	int my_id = (int)lua_tointeger(L, -3);
+	int user_id = (int)lua_tointeger(L, -2);
+	char* mess = (char*)lua_tostring(L, -1);
+
+	lua_pop(L, 3);
+
+	timer->add_timer(my_id, OP_RUNAWAY, std::chrono::system_clock::now() + std::chrono::seconds(3), user_id, mess);
+
+	return 0;
 }

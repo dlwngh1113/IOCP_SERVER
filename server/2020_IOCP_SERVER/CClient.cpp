@@ -81,17 +81,11 @@ void CClient::Init(short x, short y, short level, char* name, int i)
 	lua_pushnumber(L, i);
 	lua_pcall(L, 1, 1, 0);
 	// lua_pop(L, 1);// eliminate set_uid from stack after call
-
-	lua_register(L, "API_SendEnterMessage", API_SendEnterMessage);
-	lua_register(L, "API_SendLeaveMessage", API_SendLeaveMessage);
-	lua_register(L, "API_get_x", API_get_x);
-	lua_register(L, "API_get_y", API_get_y);
 }
 
 void CClient::Release()
 {
 	this->c_lock.lock();
-	set_userdata(id, false);
 	this->in_use = false;
 	this->view_list.clear();
 	closesocket(this->m_sock);
@@ -346,6 +340,11 @@ int& CClient::getAtktime()
 int& CClient::getMoveTime()
 {
 	return move_time;
+}
+
+lua_State* CClient::getLua()
+{
+	return L;
 }
 
 unsigned char* CClient::getPacketStart()
