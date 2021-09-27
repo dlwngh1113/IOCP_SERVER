@@ -419,7 +419,7 @@ int CServer::API_SendEnterMessage(lua_State* L)
 
 	if (std::chrono::system_clock::now().time_since_epoch().count() > g_clients[my_id].getAtktime())
 	{
-		g_clients[my_id].atk_time = system_clock::now().time_since_epoch().count();
+		g_clients[my_id].getAtktime() = std::chrono::system_clock::now().time_since_epoch().count();
 		g_clients[user_id].hp -= 10;
 
 		if (g_clients[user_id].getHP() <= 0) {
