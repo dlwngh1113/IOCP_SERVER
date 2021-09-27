@@ -2,7 +2,6 @@
 
 CServer::CServer()
 {
-	g_clients = new CClient[MAX_USER + NUM_NPC];
 	timer = new CTimer();
 	npcController = new CNPCController();
 	dbConnector = new CDBConnector();
@@ -10,7 +9,6 @@ CServer::CServer()
 
 CServer::~CServer()
 {
-	delete[] g_clients;
 	delete timer;
 	delete npcController;
 	delete dbConnector;
@@ -19,8 +17,6 @@ CServer::~CServer()
 void CServer::run()
 {
 	std::wcout.imbue(std::locale("korean"));
-	for (int i = 0; i < MAX_USER + NUM_NPC; ++i)
-		g_clients[i].SetUse(false);
 
 	dbConnector->Init();
 
@@ -118,7 +114,7 @@ void CServer::worker_thread()
 			delete over_ex;
 			break;
 		case OP_RANDOM_MOVE:
-			if (g_clients[key].getHP() > 0)
+			if (reinterpret_cast<CClient*>(characters[key])->getHP() > 0)
 				npcController->random_move_npc(key);
 			delete over_ex;
 			break;

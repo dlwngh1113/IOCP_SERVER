@@ -1,5 +1,9 @@
 #include "CCharacter.h"
 
+CCharacter::CCharacter(std::string name, short x, short y) :name{ name }, x{ x }, y{ y }
+{
+}
+
 void CCharacter::Move(short dx, short dy)
 {
     x += dx;

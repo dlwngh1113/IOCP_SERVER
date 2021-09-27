@@ -1,13 +1,14 @@
 #pragma once
 #include"framework.h"
 #include"CClient.h"
+#include"CCharacter.h"
 #include"CTimer.h"
 #include"CNPCController.h"
 #include"CDBConnector.h"
 
 class CServer
 {
-	CClient* g_clients;
+	std::unordered_map<int, CCharacter*> characters;
 	HANDLE		h_iocp;
 
 	SOCKET g_lSocket;
