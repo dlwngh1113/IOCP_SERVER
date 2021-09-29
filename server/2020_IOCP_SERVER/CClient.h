@@ -1,5 +1,5 @@
 #pragma once
-#include"CCharacter.h"
+#include"CMonster.h"
 
 class CClient : public CCharacter
 {
@@ -13,9 +13,6 @@ class CClient : public CCharacter
 	unsigned char* m_packet_start;
 	unsigned char* m_recv_start;
 
-	std::mutex vl;
-	std::unordered_set <int> view_list;
-
 	int move_time;
 	int atk_time;
 
@@ -26,8 +23,8 @@ public:
 	virtual std::unordered_set<int>& GetViewlist();
 	virtual short GetX() const;
 	virtual short GetY() const;
+	virtual std::mutex& GetViewlock();
 	short getHP() const;
-	bool getUse() const;
 	short getLevel() const;
 	int getExp() const;
 	unsigned char* getPacketStart();
@@ -56,7 +53,7 @@ public:
 	void HitByPlayer(char* mess);
 	void StartRecv();
 	void ErasePlayer(int id);
-	void EnterPlayer(CClient* other);
+	void EnterPlayer(CCharacter* other);
 
 	void IncreaseBuffer(DWORD iosize, long long left_data);
 
@@ -64,7 +61,7 @@ public:
 	void send_login_ok();
 	void send_heal_packet(char* mess);
 	void send_leave_packet(int targetID);
-	void send_enter_packet(CClient* other);
+	void send_enter_packet(CCharacter* other);
 	void send_move_packet(CClient* other);
 	void send_stat_change();
 	void send_chat_packet(int targetID, char* mess);

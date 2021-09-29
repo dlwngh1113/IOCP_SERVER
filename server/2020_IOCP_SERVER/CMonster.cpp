@@ -23,6 +23,11 @@ void CMonster::Teleport(short x, short y)
 	CCharacter::Teleport(x, y);
 }
 
+std::mutex& CMonster::GetViewlock()
+{
+	return CCharacter::GetViewlock();
+}
+
 std::string& CMonster::GetName()
 {
 	return CCharacter::GetName();

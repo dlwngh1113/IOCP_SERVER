@@ -325,48 +325,51 @@ void CServer::process_move(int id, char dir)
 	client->send_move_packet(client);
 
 	std::unordered_set <int> new_viewlist;
-	for (int i = 0; i < MAX_USER; ++i) {
-		if (id == i) continue;
-		if (false == g_clients[i].getUse()) continue;
-		if (true == is_near(id, i)) new_viewlist.insert(i);
-	}
-
-	for (int i = MAX_USER; i < MAX_USER + NUM_NPC; ++i) {
-		if (true == is_near(id, i)) {
-			new_viewlist.insert(i);
-			wake_up_npc(i);
+	for (const auto& ch : characters)
+	{
+		if (id == ch.first)continue;
+		if (ch.first > MAX_USER)
+		{
+			if (true == is_near(id, ch.first))
+			{
+				new_viewlist.insert(ch.first);
+				wake_up_npc(ch.first);
+			}
 		}
+		else if (true == is_near(id, ch.first))
+			new_viewlist.insert(ch.first);
 	}
 
 	// 시야에 들어온 객체 처리
 	for (int ob : new_viewlist) {
 		if (0 == old_viewlist.count(ob)) {
-			g_clients[id].EnterPlayer(g_clients[ob]);
+			client->EnterPlayer(characters[ob]);
 
 			if (false == is_npc(ob)) {
-				if (0 == g_clients[ob].getViewList().count(id)) {
-					g_clients[ob].EnterPlayer(g_clients[id]);
+				if (0 == characters[ob]->GetViewlist().count(id)) {
+					reinterpret_cast<CClient*>(characters[ob])->EnterPlayer(characters[id]);
 				}
-				else {
-					g_clients[ob].send_move_packet(g_clients[id]);
+				else 
+				{
+					reinterpret_cast<CClient*>(characters[ob])->send_move_packet(client);
 				}
 			}
 		}
 		else {  // 이전에도 시야에 있었고, 이동후에도 시야에 있는 객체
 			if (false == is_npc(ob)) {
-				if (0 != g_clients[ob].getViewList().count(id)) {
-					g_clients[ob].send_move_packet(g_clients[id]);
+				if (0 != characters[ob]->GetViewlist().count(id)) {
+					reinterpret_cast<CClient*>(characters[ob])->send_move_packet(client);
 				}
 				else
 				{
-					g_clients[ob].EnterPlayer(g_clients[id]);
+					reinterpret_cast<CClient*>(characters[ob])->EnterPlayer(client);
 				}
 			}
 		}
 	}
 	for (int ob : old_viewlist) {
 		if (0 == new_viewlist.count(ob)) {
-			g_clients[id].ErasePlayer(ob);
+			client->ErasePlayer(ob);
 			if (false == is_npc(ob)) {
 				if (0 != g_clients[ob].getViewList().count(id)) {
 					g_clients[ob].ErasePlayer(id);

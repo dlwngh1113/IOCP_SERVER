@@ -21,6 +21,11 @@ std::unordered_set<int>& CCharacter::GetViewlist()
     return viewList;
 }
 
+std::mutex& CCharacter::GetViewlock()
+{
+    return viewLock;
+}
+
 std::string& CCharacter::GetName()
 {
     return name;

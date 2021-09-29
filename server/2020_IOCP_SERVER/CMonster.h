@@ -13,6 +13,7 @@ public:
 	virtual void Move(short dx, short dy);
 	virtual void Teleport(short x, short y);
 
+	std::mutex& GetViewlock();
 	std::string& GetName();
 	std::unordered_set<int>& GetViewlist();
 	short GetX();

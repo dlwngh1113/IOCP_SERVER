@@ -69,7 +69,7 @@ void CClient::Init(short x, short y, short level, char* name, int i)
 void CClient::Release()
 {
 	this->c_lock.lock();
-	this->view_list.clear();
+	CCharacter::GetViewlist().clear();
 	closesocket(this->m_sock);
 	this->m_sock = 0;
 	this->c_lock.unlock();
@@ -157,7 +157,7 @@ void CClient::send_leave_packet(int targetID)
 	send_packet(&p);
 }
 
-void CClient::send_enter_packet(CClient* other)
+void CClient::send_enter_packet(CCharacter* other)
 {
 	sc_packet_enter p;
 	p.id = other->GetID();
@@ -165,9 +165,16 @@ void CClient::send_enter_packet(CClient* other)
 	p.type = SC_PACKET_ENTER;
 	p.x = other->GetX();
 	p.y = other->GetY();
-	other->c_lock.lock();
-	strcpy_s(p.name, other->GetName().c_str());
-	other->c_lock.unlock();
+	if (p.id > MAX_USER)
+	{
+		strcpy_s(p.name, other->GetName().c_str());
+	}
+	else
+	{
+		reinterpret_cast<CClient*>(other)->c_lock.lock();
+		strcpy_s(p.name, other->GetName().c_str());
+		reinterpret_cast<CClient*>(other)->c_lock.unlock();
+	}
 	p.o_type = 0;
 	send_packet(&p);
 }
@@ -223,18 +230,18 @@ void CClient::StartRecv()
 
 void CClient::ErasePlayer(int id)
 {
-	this->vl.lock();
-	this->view_list.erase(id);
-	this->vl.unlock();
+	GetViewlock().lock();
+	GetViewlist().erase(id);
+	GetViewlock().unlock();
 	send_leave_packet(id);
 }
 
-void CClient::EnterPlayer(CClient* other)
+void CClient::EnterPlayer(CCharacter* other)
 {
-	vl.lock();
-	view_list.insert(other->GetID());
+	GetViewlock().lock();
+	GetViewlist().insert(other->GetID());
 	send_enter_packet(other);
-	vl.unlock();
+	GetViewlock().unlock();
 }
 
 void CClient::IncreaseBuffer(DWORD iosize, long long left_data)
@@ -332,4 +339,9 @@ short CClient::GetX() const
 short CClient::GetY() const
 {
 	return CCharacter::GetY();
+}
+
+std::mutex& CClient::GetViewlock()
+{
+	return CCharacter::GetViewlock();
 }
