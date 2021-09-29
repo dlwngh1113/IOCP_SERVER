@@ -2,17 +2,10 @@
 
 CClient::CClient()
 {
-	name = new char[MAX_ID_LEN];
 }
 
 CClient::~CClient()
 {
-	delete[] name;
-}
-
-void CClient::SetUse(bool b)
-{
-	in_use = b;
 }
 
 void CClient::SetClient(int id, SOCKET ns)
@@ -48,19 +41,9 @@ void CClient::SetInfo(char* name, short level, short x, short y, int exp, short 
 	this->c_lock.unlock();
 }
 
-void CClient::SetPosition(short x, short y)
+void CClient::Teleport(short x, short y)
 {
-	this->x = x;
-	this->y = y;
-}
-
-void CClient::MoveNotify(int objID)
-{
-	this->lua_l.lock();
-	lua_getglobal(this->L, "event_player_move");
-	lua_pushnumber(this->L, objID);
-	lua_pcall(this->L, 1, 1, 0);
-	this->lua_l.unlock();
+	CCharacter::Teleport(x, y);
 }
 
 void CClient::Init(short x, short y, short level, char* name, int i)
@@ -86,7 +69,6 @@ void CClient::Init(short x, short y, short level, char* name, int i)
 void CClient::Release()
 {
 	this->c_lock.lock();
-	this->in_use = false;
 	this->view_list.clear();
 	closesocket(this->m_sock);
 	this->m_sock = 0;
@@ -102,7 +84,7 @@ void CClient::AutoHeal()
 	else if (this->hp + maxHp * 0.1 < maxHp)
 		this->hp += maxHp * 0.1;
 	char mess[MAX_STR_LEN];
-	sprintf_s(mess, "auto healing...%s", this->name);
+	sprintf_s(mess, "auto healing...%s", this->GetName().c_str());
 	send_heal_packet(mess);
 	this->c_lock.unlock();
 }
@@ -126,14 +108,14 @@ void CClient::HitByPlayer(char* mess)
 	c_lock.lock();
 	hp -= 100;
 	sprintf_s(mess, MAX_STR_LEN, "%s had %d damage. %d left",
-		name, 100, hp);
+		this->GetName().c_str(), 100, hp);
 	c_lock.unlock();
 }
 
 void CClient::send_login_fail()
 {
 	sc_packet_login_fail p;
-	p.id = id;
+	p.id = this->GetID();
 	p.size = sizeof(p);
 	p.type = SC_PACKET_LOGIN_OK;
 	strcpy_s(p.message, "another client is using this name");
@@ -145,12 +127,12 @@ void CClient::send_login_ok()
 	sc_packet_login_ok p;
 	p.exp = exp;
 	p.hp = hp;
-	p.id = id;
+	p.id = this->GetID();
 	p.level = level;
 	p.size = sizeof(p);
 	p.type = SC_PACKET_LOGIN_OK;
-	p.x = x;
-	p.y = y;
+	p.x = this->GetX();
+	p.y = this->GetY();
 	send_packet(&p);
 }
 
@@ -175,30 +157,30 @@ void CClient::send_leave_packet(int targetID)
 	send_packet(&p);
 }
 
-void CClient::send_enter_packet(CClient& other)
+void CClient::send_enter_packet(CClient* other)
 {
 	sc_packet_enter p;
-	p.id = other.id;
+	p.id = other->GetID();
 	p.size = sizeof(p);
 	p.type = SC_PACKET_ENTER;
-	p.x = other.x;
-	p.y = other.y;
-	other.c_lock.lock();
-	strcpy_s(p.name, other.name);
-	other.c_lock.unlock();
+	p.x = other->GetX();
+	p.y = other->GetY();
+	other->c_lock.lock();
+	strcpy_s(p.name, other->GetName().c_str());
+	other->c_lock.unlock();
 	p.o_type = 0;
 	send_packet(&p);
 }
 
-void CClient::send_move_packet(CClient& other)
+void CClient::send_move_packet(CClient* other)
 {
 	sc_packet_move p;
-	p.id = id;
+	p.id = this->GetID();
 	p.size = sizeof(p);
 	p.type = SC_PACKET_MOVE;
-	p.x = other.x;
-	p.y = other.y;
-	p.move_time = other.move_time;
+	p.x = other->GetX();
+	p.y = other->GetY();
+	p.move_time = other->move_time;
 	send_packet(&p);
 }
 
@@ -223,20 +205,13 @@ void CClient::send_chat_packet(int targetID, char* mess)
 		send_packet(&p);
 }
 
-bool CClient::CompareExchangeStrong(bool b)
-{
-	return is_active.compare_exchange_strong(b, true);
-}
-
 void CClient::StartRecv()
 {
 	DWORD flags = 0;
 	int ret;
 	this->c_lock.lock();
-	if (true == this->in_use) {
-		ret = WSARecv(this->m_sock, &this->m_recv_over.wsa_buf, 1, NULL,
-			&flags, &this->m_recv_over.wsa_over, NULL);
-	}
+	ret = WSARecv(this->m_sock, &this->m_recv_over.wsa_buf, 1, NULL,
+		&flags, &this->m_recv_over.wsa_over, NULL);
 	this->c_lock.unlock();
 	if (SOCKET_ERROR == ret) {
 		int err_no = WSAGetLastError();
@@ -254,10 +229,10 @@ void CClient::ErasePlayer(int id)
 	send_leave_packet(id);
 }
 
-void CClient::EnterPlayer(CClient& other)
+void CClient::EnterPlayer(CClient* other)
 {
 	vl.lock();
-	view_list.insert(other.id);
+	view_list.insert(other->GetID());
 	send_enter_packet(other);
 	vl.unlock();
 }
@@ -279,10 +254,8 @@ void CClient::IncreaseBuffer(DWORD iosize, long long left_data)
 		static_cast<int>(next_recv_ptr - m_recv_over.iocp_buf);
 
 	c_lock.lock();
-	if (true == in_use) {
-		WSARecv(m_sock, &m_recv_over.wsa_buf,
-			1, NULL, &recv_flag, &m_recv_over.wsa_over, NULL);
-	}
+	WSARecv(m_sock, &m_recv_over.wsa_buf,
+		1, NULL, &recv_flag, &m_recv_over.wsa_over, NULL);
 	c_lock.unlock();
 }
 
@@ -296,9 +269,8 @@ void CClient::send_packet(void* p)
 	send_over->wsa_buf.len = packet[0];
 	ZeroMemory(&send_over->wsa_over, sizeof(send_over->wsa_over));
 	this->c_lock.lock();
-	if (true == this->in_use)
-		WSASend(this->m_sock, &send_over->wsa_buf, 1,
-			NULL, 0, &send_over->wsa_over, NULL);
+	WSASend(this->m_sock, &send_over->wsa_buf, 1,
+		NULL, 0, &send_over->wsa_over, NULL);
 	this->c_lock.unlock();
 }
 
@@ -307,14 +279,14 @@ short CClient::getHP() const
 	return this->hp;
 }
 
-bool CClient::getUse() const
+std::string& CClient::GetName()
 {
-	return this->in_use;
+	return CCharacter::GetName();
 }
 
-char* CClient::getName()
+std::unordered_set<int>& CClient::GetViewlist()
 {
-	return name;
+	return CCharacter::GetViewlist();
 }
 
 short CClient::getLevel() const
@@ -327,11 +299,6 @@ int CClient::getExp() const
 	return exp;
 }
 
-std::unordered_set<int>& CClient::getViewList()
-{
-	return this->view_list;
-}
-
 int& CClient::getAtktime()
 {
 	return atk_time;
@@ -340,11 +307,6 @@ int& CClient::getAtktime()
 int& CClient::getMoveTime()
 {
 	return move_time;
-}
-
-lua_State* CClient::getLua()
-{
-	return L;
 }
 
 unsigned char* CClient::getPacketStart()
@@ -362,12 +324,12 @@ char CClient::getPacketType() const
 	return m_packet_start[1];
 }
 
-short CClient::getX() const
+short CClient::GetX() const
 {
-	return x;
+	return CCharacter::GetX();
 }
 
-short CClient::getY() const
+short CClient::GetY() const
 {
-	return y;
+	return CCharacter::GetY();
 }

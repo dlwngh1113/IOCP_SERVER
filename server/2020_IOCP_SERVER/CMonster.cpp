@@ -4,8 +4,9 @@ CMonster::CMonster() :CCharacter()
 {
 }
 
-CMonster::CMonster(std::string name, short x, short y) : CCharacter(name, x, y)
+CMonster::CMonster(int id, std::string name, short x, short y, short level) : CCharacter(id, name, x, y)
 {
+	this->level = level;
 }
 
 CMonster::~CMonster()
@@ -27,12 +28,17 @@ std::string& CMonster::GetName()
 	return CCharacter::GetName();
 }
 
-short& CMonster::GetX()
+std::unordered_set<int>& CMonster::GetViewlist()
+{
+	return CCharacter::GetViewlist();
+}
+
+short CMonster::GetX()
 {
 	return CCharacter::GetX();
 }
 
-short& CMonster::GetY()
+short CMonster::GetY()
 {
 	return CCharacter::GetY();
 }

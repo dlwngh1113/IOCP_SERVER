@@ -1,7 +1,7 @@
 #pragma once
 #include"framework.h"
 #include"CClient.h"
-#include"CCharacter.h"
+#include"CMonster.h"
 #include"CTimer.h"
 #include"CNPCController.h"
 #include"CDBConnector.h"

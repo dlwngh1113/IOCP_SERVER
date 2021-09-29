@@ -1,6 +1,6 @@
 #include "CCharacter.h"
 
-CCharacter::CCharacter(std::string name, short x, short y) :name{ name }, x{ x }, y{ y }
+CCharacter::CCharacter(int id, std::string name, short x, short y) :id{ id }, name { name }, x{ x }, y{ y }
 {
 }
 
@@ -16,17 +16,27 @@ void CCharacter::Teleport(short x, short y)
     this->y = y;
 }
 
+std::unordered_set<int>& CCharacter::GetViewlist()
+{
+    return viewList;
+}
+
 std::string& CCharacter::GetName()
 {
     return name;
 }
 
-short& CCharacter::GetX()
+short CCharacter::GetX() const
 {
     return x;
 }
 
-short& CCharacter::GetY()
+short CCharacter::GetY() const
 {
     return y;
+}
+
+int CCharacter::GetID() const
+{
+    return id;
 }

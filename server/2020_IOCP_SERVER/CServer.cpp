@@ -65,10 +65,8 @@ void CServer::initialize_NPC()
 		char npc_name[50];
 		sprintf_s(npc_name, "N%d", i);
 
-		g_clients[i].Init(rand() % WORLD_WIDTH,
-						rand() % WORLD_HEIGHT,
-						rand() % 10 + 1,
-						npc_name, i);
+		auto monster = new CMonster(i, npc_name, rand() % WORLD_WIDTH, rand() % WORLD_HEIGHT, rand() % 10 + 1);
+		characters[i] = monster;
 
 		lua_register(g_clients[i].getLua(), "API_SendEnterMessage", API_SendEnterMessage);
 		lua_register(g_clients[i].getLua(), "API_SendLeaveMessage", API_SendLeaveMessage);
@@ -160,7 +158,7 @@ void CServer::add_new_client(SOCKET ns)
 
 void CServer::disconnect_client(int id)
 {
-	for (auto& i : g_clients[id].getViewList())
+	for (auto& i : characters[id]->getViewList())
 		g_clients[i].ErasePlayer(id);
 	dbConnector->set_userdata(&g_clients[id], false);
 	g_clients[id].Release();
@@ -216,18 +214,19 @@ void CServer::process_recv(int id, DWORD iosize)
 
 void CServer::process_packet(int id)
 {
-	char p_type = g_clients[id].getPacketType();
+	auto client = reinterpret_cast<CClient*>(characters[id]);
+	char p_type = client->getPacketType();
 	switch (p_type) {
 	case CS_LOGIN:
 	{
-		cs_packet_login* p = reinterpret_cast<cs_packet_login*>(g_clients[id].getPacketStart());
+		cs_packet_login* p = reinterpret_cast<cs_packet_login*>(client->getPacketStart());
 		process_login(p, id);
 		break;
 	}
 	case CS_MOVE: {
-		cs_packet_move* p = reinterpret_cast<cs_packet_move*>(g_clients[id].getPacketStart());
-		if (g_clients[id].getMoveTime() < p->move_time) {
-			g_clients[id].getMoveTime() = p->move_time;
+		cs_packet_move* p = reinterpret_cast<cs_packet_move*>(client->getPacketStart());
+		if (client->getMoveTime() < p->move_time) {
+			client->getMoveTime() = p->move_time;
 			process_move(id, p->direction);
 		}
 	}
@@ -239,17 +238,17 @@ void CServer::process_packet(int id)
 	break;
 	case CS_ATTACK:
 	{
-		cs_packet_attack* p = reinterpret_cast<cs_packet_attack*>(g_clients[id].getPacketStart());
-		if (g_clients[id].getAtktime() < p->atk_time) {
-			g_clients[id].getAtktime() = p->atk_time;
+		cs_packet_attack* p = reinterpret_cast<cs_packet_attack*>(client->getPacketStart());
+		if (client->getAtktime() < p->atk_time) {
+			client->getAtktime() = p->atk_time;
 			process_attack(id);
 		}
 	}
 	break;
 	case CS_TELEPORT:
 	{
-		cs_packet_teleport* p = reinterpret_cast<cs_packet_teleport*>(g_clients[id].getPacketStart());
-		g_clients[id].SetPosition(p->x, p->y);
+		cs_packet_teleport* p = reinterpret_cast<cs_packet_teleport*>(client->getPacketStart());
+		client->Teleport(p->x, p->y);
 	}
 	break;
 	default: std::cout << "Unknown Packet type [" << p_type << "] from Client [" << id << "]\n";
@@ -259,53 +258,71 @@ void CServer::process_packet(int id)
 
 void CServer::process_login(cs_packet_login* p, int id)
 {
-	strcpy_s(g_clients[id].getName(), MAX_ID_LEN, p->name);
-	for (int i = 0; i < MAX_USER; ++i) {
-		if (g_clients[i].getUse() && (i != id))
-			if (strcmp(g_clients[i].getName(), g_clients[id].getName()) != 0);
-			else {
-				g_clients[id].send_login_fail();
+	auto client = reinterpret_cast<CClient*>(characters[id]);
+	client->GetName() = p->name;
+	for (const auto& c : characters)
+	{
+		if (id != c.first)
+		{
+			if (strcmp(c.second->GetName().c_str(), client->GetName().c_str()) != 0);
+			else
+			{
+				client->send_login_fail();
 				return;
 			}
+		}
 	}
-	dbConnector->set_userdata(&g_clients[id], true);
+	dbConnector->set_userdata(client, true);
 
 	if (dbConnector->GetReturnCode() != SQL_SUCCESS && dbConnector->GetReturnCode() != SQL_SUCCESS_WITH_INFO)
-		dbConnector->get_userdata(&g_clients[id], p);
+		dbConnector->get_userdata(client, p);
 
-	g_clients[id].send_login_ok();
-	for (int i = 0; i < MAX_USER; ++i)
-		if (true == g_clients[i].getUse())
-			if (id != i) {
-				if (false == is_near(i, id)) continue;
-				if (0 == g_clients[i].getViewList().count(id))
-					g_clients[i].EnterPlayer(g_clients[id]);
-				if (0 == g_clients[id].getViewList().count(i))
-					g_clients[id].EnterPlayer(g_clients[i]);
-			}
-	for (int i = MAX_USER; i < MAX_USER + NUM_NPC; ++i) {
-		if (false == is_near(id, i)) continue;
-		g_clients[id].EnterPlayer(g_clients[i]);
-		wake_up_npc(i);
+	client->send_login_ok();
+	for (const auto& ch : characters)
+	{
+		//npc case
+		if (ch.first > MAX_USER)
+		{
+			if (false == is_near(id, ch.first))continue;
+			client->EnterPlayer(reinterpret_cast<CClient*>(ch.second));
+			wake_up_npc(ch.first);
+		}
+		//player case
+		else if (id != ch.first)
+		{
+			if (false == is_near(ch.first, id))continue;
+			if (0 == ch.second->GetViewlist().count(id))
+				reinterpret_cast<CClient*>(ch.second)->EnterPlayer(client);
+			if (0 == client->GetViewlist().count(ch.first))
+				client->EnterPlayer(reinterpret_cast<CClient*>(ch.second));
+		}
 	}
 }
 
 void CServer::process_move(int id, char dir)
 {
-	short y = g_clients[id].getY();
-	short x = g_clients[id].getX();
+	auto client = reinterpret_cast<CClient*>(characters[id]);
+	short y = client->GetY();
+	short x = client->GetX();
 	switch (dir) {
-	case MV_UP: if (y > 0) y--; break;
-	case MV_DOWN: if (y < (WORLD_HEIGHT - 1)) y++; break;
-	case MV_LEFT: if (x > 0) x--; break;
-	case MV_RIGHT: if (x < (WORLD_WIDTH - 1)) x++; break;
+	case MV_UP: if (y > 0)
+		client->Move(0, -1);
+		break;
+	case MV_DOWN: if (y < (WORLD_HEIGHT - 1))
+		client->Move(0, 1);
+		break;
+	case MV_LEFT: if (x > 0)
+		client->Move(-1, 0);
+		break;
+	case MV_RIGHT: if (x < (WORLD_WIDTH - 1))
+		client->Move(1, 0);
+		break;
 	default: std::cout << "Unknown Direction in CS_MOVE packet.\n";
 		while (true);
 	}
-	std::unordered_set <int> old_viewlist = g_clients[id].getViewList();
+	std::unordered_set <int> old_viewlist = client->GetViewlist();
 
-	g_clients[id].SetPosition(x, y);
-	g_clients[id].send_move_packet(g_clients[id]);
+	client->send_move_packet(client);
 
 	std::unordered_set <int> new_viewlist;
 	for (int i = 0; i < MAX_USER; ++i) {
