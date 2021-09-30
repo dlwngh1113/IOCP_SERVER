@@ -3,7 +3,7 @@
 
 class CCharacter
 {
-	CInfo* info;
+	CInfo* info{ nullptr };
 	
 	std::unordered_set<int> viewList;
 	std::mutex viewLock;
@@ -17,4 +17,6 @@ public:
 
 	virtual std::unordered_set<int>& GetViewlist();
 	virtual std::mutex& GetViewlock();
+
+	CInfo* GetInfo();
 };

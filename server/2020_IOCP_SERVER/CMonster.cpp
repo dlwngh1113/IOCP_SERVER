@@ -28,24 +28,9 @@ std::mutex& CMonster::GetViewlock()
 	return CCharacter::GetViewlock();
 }
 
-std::string& CMonster::GetName()
-{
-	return CCharacter::GetName();
-}
-
 std::unordered_set<int>& CMonster::GetViewlist()
 {
 	return CCharacter::GetViewlist();
-}
-
-short CMonster::GetX()
-{
-	return CCharacter::GetX();
-}
-
-short CMonster::GetY()
-{
-	return CCharacter::GetY();
 }
 
 void CMonster::MoveNotify(int id)

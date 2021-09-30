@@ -14,10 +14,7 @@ public:
 	virtual void Teleport(short x, short y);
 
 	std::mutex& GetViewlock();
-	std::string& GetName();
 	std::unordered_set<int>& GetViewlist();
-	short GetX();
-	short GetY();
 
 	void MoveNotify(int id);
 };

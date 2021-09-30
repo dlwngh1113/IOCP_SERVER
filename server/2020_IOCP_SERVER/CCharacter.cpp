@@ -26,3 +26,8 @@ std::mutex& CCharacter::GetViewlock()
 {
     return viewLock;
 }
+
+CInfo* CCharacter::GetInfo()
+{
+    return info;
+}
