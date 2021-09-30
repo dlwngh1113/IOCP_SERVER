@@ -143,6 +143,7 @@
     <ClCompile Include="CClient.cpp" />
     <ClCompile Include="CDBConnector.cpp" />
     <ClCompile Include="CEvent.cpp" />
+    <ClCompile Include="CInfo.cpp" />
     <ClCompile Include="CMonster.cpp" />
     <ClCompile Include="CNPCController.cpp" />
     <ClCompile Include="CServer.cpp" />
@@ -154,6 +155,7 @@
     <ClInclude Include="CClient.h" />
     <ClInclude Include="CDBConnector.h" />
     <ClInclude Include="CEvent.h" />
+    <ClInclude Include="CInfo.h" />
     <ClInclude Include="CMonster.h" />
     <ClInclude Include="CNPCController.h" />
     <ClInclude Include="CServer.h" />
