@@ -117,7 +117,7 @@ void CServer::worker_thread()
 			delete over_ex;
 			break;
 		case OP_PLAYER_MOVE_NOTIFY:
-			g_clients[key].MoveNotify(over_ex->object_id);
+			reinterpret_cast<CMonster*>(characters[key])->MoveNotify(over_ex->object_id);
 			delete over_ex;
 			break;
 		case OP_HEAL:
@@ -135,7 +135,7 @@ void CServer::add_new_client(SOCKET ns)
 	int i;
 	id_lock.lock();
 	for (i = 0; i < MAX_USER; ++i)
-		if (false == g_clients[i].getUse()) break;
+		if (0 == characters.count(i)) break;
 	id_lock.unlock();
 	if (MAX_USER == i) {
 		std::cout << "Max user limit exceeded.\n";
@@ -143,9 +143,11 @@ void CServer::add_new_client(SOCKET ns)
 	}
 	else {
 		// cout << "New Client [" << i << "] Accepted" << endl;
-		g_clients[i].SetClient(i, ns);
+		characters[i] = new CClient(i, "", 
+			rand() % WORLD_WIDTH, 
+			rand() % WORLD_HEIGHT, ns);
 		CreateIoCompletionPort(reinterpret_cast<HANDLE>(ns), h_iocp, i, 0);
-		g_clients[i].StartRecv();
+		reinterpret_cast<CClient*>(characters[i])->StartRecv();
 		timer->add_timer(i, OP_HEAL, std::chrono::system_clock::now() + std::chrono::seconds(5));
 	}
 
@@ -158,25 +160,22 @@ void CServer::add_new_client(SOCKET ns)
 
 void CServer::disconnect_client(int id)
 {
-	for (auto& i : characters[id]->getViewList())
-		g_clients[i].ErasePlayer(id);
-	dbConnector->set_userdata(&g_clients[id], false);
-	g_clients[id].Release();
+	auto client = reinterpret_cast<CClient*>(characters[id]);
+	for (auto& i : client->GetViewlist())
+		client->ErasePlayer(id);
+	dbConnector->set_userdata(client, false);
+	client->Release();
 }
 
 void CServer::wake_up_npc(int id)
 {
-	bool b = false;
-	if (true == g_clients[id].CompareExchangeStrong(b))
-	{
-		timer->add_timer(id, OP_RANDOM_MOVE, std::chrono::system_clock::now() + std::chrono::seconds(1));
-	}
+	timer->add_timer(id, OP_RANDOM_MOVE, std::chrono::system_clock::now() + std::chrono::seconds(1));
 }
 
 bool CServer::is_near(int p1, int p2)
 {
-	int dist = (g_clients[p1].getX() - g_clients[p2].getX()) * (g_clients[p1].getX() - g_clients[p2].getX());
-	dist += (g_clients[p1].getY() - g_clients[p2].getY()) * (g_clients[p1].getY() - g_clients[p2].getY());
+	int dist = (characters[p1]->GetX() - characters[p2]->GetX()) * (characters[p1]->GetX() - characters[p2]->GetX());
+	dist += (characters[p1]->GetY() - characters[p2]->GetY()) * (characters[p1]->GetY() - characters[p2]->GetY());
 
 	return dist <= VIEW_LIMIT * VIEW_LIMIT;
 }
@@ -188,16 +187,17 @@ bool CServer::is_npc(int id)
 
 bool CServer::isIn_atkRange(int p1, int p2)
 {
-	int dist = (g_clients[p1].getX() - g_clients[p2].getX()) * (g_clients[p1].getX() - g_clients[p2].getX());
-	dist += (g_clients[p1].getY() - g_clients[p2].getY()) * (g_clients[p1].getY() - g_clients[p2].getY());
+	int dist = (characters[p1]->GetX() - characters[p2]->GetX()) * (characters[p1]->GetX() - characters[p2]->GetX());
+	dist += (characters[p1]->GetY() - characters[p2]->GetY()) * (characters[p1]->GetY() - characters[p2]->GetY());
 
 	return dist <= 1;
 }
 
 void CServer::process_recv(int id, DWORD iosize)
 {
-	unsigned char* packet_start = g_clients[id].getPacketStart();
-	unsigned char* next_recv_ptr = g_clients[id].getRecvStart() + iosize;
+	auto client = reinterpret_cast<CClient*>(characters[id]);
+	unsigned char* packet_start = client->getPacketStart();
+	unsigned char* next_recv_ptr = client->getRecvStart() + iosize;
 	unsigned char p_size = packet_start[0];
 	while (p_size <= next_recv_ptr - packet_start) {
 		process_packet(id);
@@ -209,7 +209,7 @@ void CServer::process_recv(int id, DWORD iosize)
 
 	long long left_data = next_recv_ptr - packet_start;
 
-	g_clients[id].IncreaseBuffer(iosize, left_data);
+	client->IncreaseBuffer(iosize, left_data);
 }
 
 void CServer::process_packet(int id)
@@ -371,8 +371,8 @@ void CServer::process_move(int id, char dir)
 		if (0 == new_viewlist.count(ob)) {
 			client->ErasePlayer(ob);
 			if (false == is_npc(ob)) {
-				if (0 != g_clients[ob].getViewList().count(id)) {
-					g_clients[ob].ErasePlayer(id);
+				if (0 != characters[ob]->GetViewlist().count(id)) {
+					reinterpret_cast<CClient*>(characters[ob])->ErasePlayer(id);
 				}
 			}
 		}
@@ -391,7 +391,7 @@ void CServer::process_move(int id, char dir)
 
 void CServer::process_attack(int id)
 {
-	for (auto& i : g_clients[id].getViewList())
+	for (auto& i : characters[id]->GetViewlist())
 		if (isIn_atkRange(id, i)) {
 			if (is_npc(i)) {
 				char mess[MAX_STR_LEN];

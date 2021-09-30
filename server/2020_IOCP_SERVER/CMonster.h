@@ -18,5 +18,7 @@ public:
 	std::unordered_set<int>& GetViewlist();
 	short GetX();
 	short GetY();
+
+	void MoveNotify(int id);
 };
 

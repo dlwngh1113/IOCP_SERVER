@@ -1,20 +1,14 @@
 #include "CClient.h"
 
-CClient::CClient()
+CClient::CClient(): CCharacter()
 {
 }
 
-CClient::~CClient()
+CClient::CClient(int id, std::string name, short x, short y, SOCKET s):CCharacter(id, name, x, y)
 {
-}
-
-void CClient::SetClient(int id, SOCKET ns)
-{
-	this->c_lock.lock();
-	this->in_use = true;
-	this->m_sock = ns;
-	this->name[0] = 0;
-	this->c_lock.unlock();
+	c_lock.lock();
+	m_sock = s;
+	c_lock.unlock();
 
 	this->m_packet_start = this->m_recv_over.iocp_buf;
 	this->m_recv_over.op_mode = OP_MODE_RECV;
@@ -23,9 +17,10 @@ void CClient::SetClient(int id, SOCKET ns)
 	this->m_recv_over.wsa_buf.len = sizeof(this->m_recv_over.iocp_buf);
 	ZeroMemory(&this->m_recv_over.wsa_over, sizeof(this->m_recv_over.wsa_over));
 	this->m_recv_start = this->m_recv_over.iocp_buf;
+}
 
-	this->x = rand() % WORLD_WIDTH;
-	this->y = rand() % WORLD_HEIGHT;
+CClient::~CClient()
+{
 }
 
 void CClient::SetInfo(char* name, short level, short x, short y, int exp, short hp)

@@ -5,7 +5,6 @@ class CClient : public CCharacter
 {
 	std::mutex c_lock;
 	short level;
-	short hp;
 	int exp;
 
 	SOCKET	m_sock;
@@ -33,7 +32,6 @@ public:
 #pragma endregion
 
 #pragma region setter
-	void SetClient(int id, SOCKET ns);
 	void SetInfo(char* name, short level, short x, short y, int exp, short hp);
 	virtual void Teleport(short x, short y);
 #pragma endregion
@@ -43,6 +41,7 @@ public:
 	int& getMoveTime();
 #pragma endregion
 	CClient();
+	CClient(int id, std::string name, short x, short y, SOCKET s);
 	virtual ~CClient();
 
 	void Init(short x, short y, short level, char* name, int i);

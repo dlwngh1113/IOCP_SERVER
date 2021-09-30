@@ -45,3 +45,10 @@ int CCharacter::GetID() const
 {
     return id;
 }
+
+void CCharacter::SetStatus(bool atkable, short hp, short atk)
+{
+    this->isAttkable = atkable;
+    this->atk = atk;
+    this->hp = hp;
+}

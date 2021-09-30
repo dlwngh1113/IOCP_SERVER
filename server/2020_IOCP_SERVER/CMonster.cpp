@@ -47,3 +47,12 @@ short CMonster::GetY()
 {
 	return CCharacter::GetY();
 }
+
+void CMonster::MoveNotify(int id)
+{
+	lua_l.lock();
+	lua_getglobal(L, "event_player_move");
+	lua_pushnumber(L, id);
+	lua_pcall(L, 1, 1, 0);
+	lua_l.unlock();
+}
