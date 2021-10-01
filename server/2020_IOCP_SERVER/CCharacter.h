@@ -20,5 +20,7 @@ public:
 	virtual void Teleport(short x, short y);
 	virtual bool GetDamage(short otherAtk);
 
+	virtual std::unordered_set<int>& GetViewlist();
+
 	CInfo* GetInfo();
 };

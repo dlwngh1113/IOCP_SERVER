@@ -161,7 +161,7 @@ void CServer::add_new_client(SOCKET ns)
 void CServer::disconnect_client(int id)
 {
 	auto client = reinterpret_cast<CClient*>(characters[id]);
-	for (auto& i : client->GetViewlist())
+	for (const auto& i : client->GetViewlist())
 		client->ErasePlayer(id);
 	dbConnector->set_userdata(client, false);
 	client->Release();
