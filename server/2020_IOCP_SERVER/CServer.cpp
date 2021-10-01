@@ -406,7 +406,7 @@ void CServer::process_attack(int id)
 				if (characters[i]->GetInfo()->hp <= 0) {
 					timer->add_timer(i, OP_REVIVAL, std::chrono::system_clock::now() + std::chrono::seconds(30));
 					sprintf_s(mess, "%s has dead, %d exp gain",
-						characters[i]->GetInfo()->name.c_str(), characters[i]->GetInfo()->hp * 10);
+						characters[i]->GetInfo()->name.c_str(), characters[i]->GetInfo()->level * 10);
 				}
 			}
 		}
@@ -416,7 +416,7 @@ int CServer::API_get_x(lua_State* L)
 {
 	int user_id = lua_tointeger(L, -1);
 	lua_pop(L, 2);
-	int x = g_clients[user_id].getX();
+	int x = characters[user_id]->GetInfo()->x;
 	lua_pushnumber(L, x);
 	return 1;
 }

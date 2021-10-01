@@ -7,6 +7,7 @@ class CMonster : public CCharacter
 public:
 	CMonster();
 	CMonster(int id, std::string name, short x, short y, short level);
+	CMonster(CInfo* info);
 	virtual ~CMonster();
 
 	virtual void Move(short dx, short dy);

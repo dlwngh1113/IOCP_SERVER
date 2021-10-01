@@ -37,6 +37,7 @@ public:
 #pragma endregion
 	CClient();
 	CClient(int id, std::string name, short x, short y, SOCKET s);
+	CClient(CInfo* info);
 	virtual ~CClient();
 
 	void Init(short x, short y, short level, char* name, int i);

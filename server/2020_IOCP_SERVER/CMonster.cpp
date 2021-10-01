@@ -6,7 +6,11 @@ CMonster::CMonster() :CCharacter()
 
 CMonster::CMonster(int id, std::string name, short x, short y, short level) : CCharacter(id, name, x, y)
 {
-	this->level = level;
+}
+
+CMonster::CMonster(CInfo* info) : CCharacter{ info }
+{
+
 }
 
 CMonster::~CMonster()

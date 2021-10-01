@@ -19,6 +19,11 @@ CClient::CClient(int id, std::string name, short x, short y, SOCKET s):CCharacte
 	this->m_recv_start = this->m_recv_over.iocp_buf;
 }
 
+CClient::CClient(CInfo* info) : CCharacter{ info }
+{
+
+}
+
 CClient::~CClient()
 {
 }
