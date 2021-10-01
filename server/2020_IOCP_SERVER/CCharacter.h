@@ -5,6 +5,7 @@ class CCharacter
 {
 	CInfo* info{ nullptr };
 	
+protected:
 	std::unordered_set<int> viewList;
 	std::mutex viewLock;
 
@@ -18,9 +19,6 @@ public:
 	virtual void Move(short dx, short dy);
 	virtual void Teleport(short x, short y);
 	virtual bool GetDamage(short otherAtk);
-
-	virtual std::unordered_set<int>& GetViewlist();
-	virtual std::mutex& GetViewlock();
 
 	CInfo* GetInfo();
 };

@@ -3,9 +3,6 @@
 
 class CClient : public CCharacter
 {
-	short level;
-	int exp;
-
 	SOCKET	m_sock;
 	OVER_EX	m_recv_over;
 	unsigned char* m_packet_start;
@@ -17,10 +14,6 @@ class CClient : public CCharacter
 	void send_packet(void* p);
 public:
 #pragma region getter
-	virtual std::unordered_set<int>& GetViewlist();
-	virtual std::mutex& GetViewlock();
-	short getLevel() const;
-	int getExp() const;
 	unsigned char* getPacketStart();
 	unsigned char* getRecvStart();
 	char getPacketType() const;
@@ -40,7 +33,6 @@ public:
 	CClient(CInfo* info);
 	virtual ~CClient();
 
-	void Init(short x, short y, short level, char* name, int i);
 	void Release();
 
 	void AutoHeal();

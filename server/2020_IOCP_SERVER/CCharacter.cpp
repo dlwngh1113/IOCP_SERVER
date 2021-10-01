@@ -39,16 +39,6 @@ bool CCharacter::GetDamage(short otherAtk)
     return false;
 }
 
-std::unordered_set<int>& CCharacter::GetViewlist()
-{
-    return viewList;
-}
-
-std::mutex& CCharacter::GetViewlock()
-{
-    return viewLock;
-}
-
 CInfo* CCharacter::GetInfo()
 {
     return info;

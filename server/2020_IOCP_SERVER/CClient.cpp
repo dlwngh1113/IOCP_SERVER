@@ -31,13 +31,13 @@ CClient::~CClient()
 void CClient::SetInfo(char* name, short level, short x, short y, int exp, short hp)
 {
 	this->c_lock.lock();
-	strcpy_s(this->name, MAX_ID_LEN, name);
+	GetInfo()->name = name;
 
-	this->level = level;
-	this->x = x;
-	this->y = y;
-	this->exp = exp;
-	this->hp = hp;
+	GetInfo()->level = level;
+	GetInfo()->x = x;
+	GetInfo()->y = y;
+	GetInfo()->exp = exp;
+	GetInfo()->hp = hp;
 	this->c_lock.unlock();
 }
 
@@ -46,30 +46,10 @@ void CClient::Teleport(short x, short y)
 	CCharacter::Teleport(x, y);
 }
 
-void CClient::Init(short x, short y, short level, char* name, int i)
-{
-	this->x = x;
-	this->y = y;
-	this->level = level;
-	this->hp = level * 100;
-	strcpy_s(this->name, MAX_ID_LEN, name);
-
-	this->is_active = false;
-	this->L = luaL_newstate();
-
-	int error = luaL_loadfile(L, "monster.lua");
-	error = lua_pcall(L, 0, 0, 0);
-
-	lua_getglobal(L, "set_uid");
-	lua_pushnumber(L, i);
-	lua_pcall(L, 1, 1, 0);
-	// lua_pop(L, 1);// eliminate set_uid from stack after call
-}
-
 void CClient::Release()
 {
 	this->c_lock.lock();
-	CCharacter::GetViewlist().clear();
+	viewList.clear();
 	closesocket(this->m_sock);
 	this->m_sock = 0;
 	this->c_lock.unlock();
@@ -78,13 +58,13 @@ void CClient::Release()
 void CClient::AutoHeal()
 {
 	this->c_lock.lock();
-	short maxHp = this->level * 70;
-	if (this->hp + maxHp * 0.1 >= maxHp)
-		this->hp = maxHp;
-	else if (this->hp + maxHp * 0.1 < maxHp)
-		this->hp += maxHp * 0.1;
+	short maxHp = GetInfo()->level * 70;
+	if (GetInfo()->hp + maxHp * 0.1 >= maxHp)
+		GetInfo()->hp = maxHp;
+	else if (GetInfo()->hp + maxHp * 0.1 < maxHp)
+		GetInfo()->hp += maxHp * 0.1;
 	char mess[MAX_STR_LEN];
-	sprintf_s(mess, "auto healing...%s", this->GetName().c_str());
+	sprintf_s(mess, "auto healing...%s", GetInfo()->name.c_str());
 	send_heal_packet(mess);
 	this->c_lock.unlock();
 }
@@ -93,11 +73,11 @@ void CClient::LevelUp(int targetID, int exp)
 {
 	c_lock.lock();
 	send_leave_packet(targetID);
-	this->exp += exp;
-	if (this->exp > level * 100) {
-		++level;
-		this->exp -= this->level * 100;
-		this->hp = this->level * 70;
+	GetInfo()->exp += exp;
+	if (GetInfo()->exp > GetInfo()->level * 100) {
+		GetInfo()->level += 1;
+		GetInfo()->exp -= GetInfo()->level * 100;
+		GetInfo()->hp = GetInfo()->level * 70;
 	}
 	send_stat_change();
 	c_lock.unlock();
@@ -106,14 +86,14 @@ void CClient::LevelUp(int targetID, int exp)
 void CClient::HitByPlayer(char* mess)
 {
 	c_lock.lock();
-	hp -= 100;
+	GetInfo()->hp -= 100;
 	c_lock.unlock();
 }
 
 void CClient::send_login_fail()
 {
 	sc_packet_login_fail p;
-	p.id = this->GetID();
+	p.id = GetInfo()->id;
 	p.size = sizeof(p);
 	p.type = SC_PACKET_LOGIN_OK;
 	strcpy_s(p.message, "another client is using this name");
@@ -123,23 +103,23 @@ void CClient::send_login_fail()
 void CClient::send_login_ok()
 {
 	sc_packet_login_ok p;
-	p.exp = exp;
-	p.hp = hp;
-	p.id = this->GetID();
-	p.level = level;
+	p.exp = GetInfo()->exp;
+	p.hp = GetInfo()->hp;
+	p.id = GetInfo()->id;
+	p.level = GetInfo()->level;
 	p.size = sizeof(p);
 	p.type = SC_PACKET_LOGIN_OK;
-	p.x = this->GetX();
-	p.y = this->GetY();
+	p.x = GetInfo()->x;
+	p.y = GetInfo()->y;
 	send_packet(&p);
 }
 
 void CClient::send_heal_packet(char* mess)
 {
 	sc_packet_stat_change p;
-	p.level = this->level;
-	p.exp = this->exp;
-	p.hp = this->hp;
+	p.level = GetInfo()->level;
+	p.exp = GetInfo()->exp;
+	p.hp = GetInfo()->hp;
 	p.type = SC_PACKET_STAT_CHANGE;
 	strcpy_s(p.message, mess);
 	p.size = sizeof(p);
@@ -158,20 +138,20 @@ void CClient::send_leave_packet(int targetID)
 void CClient::send_enter_packet(CCharacter* other)
 {
 	sc_packet_enter p;
-	p.id = other->GetID();
+	p.id = other->GetInfo()->id;
 	p.size = sizeof(p);
 	p.type = SC_PACKET_ENTER;
-	p.x = other->GetX();
-	p.y = other->GetY();
+	p.x = other->GetInfo()->x;
+	p.y = other->GetInfo()->y;
 	if (p.id > MAX_USER)
 	{
-		strcpy_s(p.name, other->GetName().c_str());
+		strcpy_s(p.name, other->GetInfo()->name.c_str());
 	}
 	else
 	{
-		reinterpret_cast<CClient*>(other)->c_lock.lock();
-		strcpy_s(p.name, other->GetName().c_str());
-		reinterpret_cast<CClient*>(other)->c_lock.unlock();
+		c_lock.lock();
+		strcpy_s(p.name, other->GetInfo()->name.c_str());
+		c_lock.unlock();
 	}
 	p.o_type = 0;
 	send_packet(&p);
@@ -180,11 +160,11 @@ void CClient::send_enter_packet(CCharacter* other)
 void CClient::send_move_packet(CClient* other)
 {
 	sc_packet_move p;
-	p.id = this->GetID();
+	p.id = GetInfo()->id;
 	p.size = sizeof(p);
 	p.type = SC_PACKET_MOVE;
-	p.x = other->GetX();
-	p.y = other->GetY();
+	p.x = other->GetInfo()->x;
+	p.y = other->GetInfo()->y;
 	p.move_time = other->move_time;
 	send_packet(&p);
 }
@@ -192,9 +172,9 @@ void CClient::send_move_packet(CClient* other)
 void CClient::send_stat_change()
 {
 	sc_packet_stat_change p;
-	p.level = level;
-	p.exp = exp;
-	p.hp = hp;
+	p.level = GetInfo()->level;
+	p.exp = GetInfo()->exp;
+	p.hp = GetInfo()->hp;
 	p.type = SC_PACKET_STAT_CHANGE;
 	p.size = sizeof(p);
 	send_packet(&p);
@@ -202,12 +182,12 @@ void CClient::send_stat_change()
 
 void CClient::send_chat_packet(int targetID, char* mess)
 {
-		sc_packet_chat p;
-		p.id = targetID;
-		p.size = sizeof(p);
-		p.type = SC_PACKET_CHAT;
-		strcpy_s(p.message, mess);
-		send_packet(&p);
+	sc_packet_chat p;
+	p.id = targetID;
+	p.size = sizeof(p);
+	p.type = SC_PACKET_CHAT;
+	strcpy_s(p.message, mess);
+	send_packet(&p);
 }
 
 void CClient::StartRecv()
@@ -228,18 +208,18 @@ void CClient::StartRecv()
 
 void CClient::ErasePlayer(int id)
 {
-	GetViewlock().lock();
-	GetViewlist().erase(id);
-	GetViewlock().unlock();
+	viewLock.lock();
+	viewList.erase(id);
+	viewLock.unlock();
 	send_leave_packet(id);
 }
 
 void CClient::EnterPlayer(CCharacter* other)
 {
-	GetViewlock().lock();
-	GetViewlist().insert(other->GetID());
+	viewLock.lock();
+	viewList.insert(other->GetInfo()->id);
 	send_enter_packet(other);
-	GetViewlock().unlock();
+	viewLock.unlock();
 }
 
 void CClient::IncreaseBuffer(DWORD iosize, long long left_data)
@@ -279,31 +259,6 @@ void CClient::send_packet(void* p)
 	this->c_lock.unlock();
 }
 
-short CClient::getHP() const
-{
-	return this->hp;
-}
-
-std::string& CClient::GetName()
-{
-	return CCharacter::GetName();
-}
-
-std::unordered_set<int>& CClient::GetViewlist()
-{
-	return CCharacter::GetViewlist();
-}
-
-short CClient::getLevel() const
-{
-	return level;
-}
-
-int CClient::getExp() const
-{
-	return exp;
-}
-
 int& CClient::getAtktime()
 {
 	return atk_time;
@@ -327,19 +282,4 @@ unsigned char* CClient::getRecvStart()
 char CClient::getPacketType() const
 {
 	return m_packet_start[1];
-}
-
-short CClient::GetX() const
-{
-	return CCharacter::GetX();
-}
-
-short CClient::GetY() const
-{
-	return CCharacter::GetY();
-}
-
-std::mutex& CClient::GetViewlock()
-{
-	return CCharacter::GetViewlock();
 }

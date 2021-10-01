@@ -11,6 +11,7 @@ public:
 	short atk{ 0 };
 	short hp{ 0 };
 	short level{ 0 };
+	int exp;
 
 	CInfo() = default;
 	CInfo(int id, std::string name, short x, short y);

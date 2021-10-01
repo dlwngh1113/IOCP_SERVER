@@ -27,16 +27,6 @@ void CMonster::Teleport(short x, short y)
 	CCharacter::Teleport(x, y);
 }
 
-std::mutex& CMonster::GetViewlock()
-{
-	return CCharacter::GetViewlock();
-}
-
-std::unordered_set<int>& CMonster::GetViewlist()
-{
-	return CCharacter::GetViewlist();
-}
-
 void CMonster::MoveNotify(int id)
 {
 	lua_l.lock();
