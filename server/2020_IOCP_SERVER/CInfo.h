@@ -10,6 +10,7 @@ public:
 	bool isAttkable{ true };
 	short atk{ 0 };
 	short hp{ 0 };
+	short level{ 0 };
 
 	CInfo() = default;
 	CInfo(int id, std::string name, short x, short y);

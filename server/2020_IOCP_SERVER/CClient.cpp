@@ -102,8 +102,6 @@ void CClient::HitByPlayer(char* mess)
 {
 	c_lock.lock();
 	hp -= 100;
-	sprintf_s(mess, MAX_STR_LEN, "%s had %d damage. %d left",
-		this->GetName().c_str(), 100, hp);
 	c_lock.unlock();
 }
 

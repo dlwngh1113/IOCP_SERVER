@@ -3,7 +3,6 @@
 
 class CClient : public CCharacter
 {
-	std::mutex c_lock;
 	short level;
 	int exp;
 
@@ -18,12 +17,8 @@ class CClient : public CCharacter
 	void send_packet(void* p);
 public:
 #pragma region getter
-	virtual std::string& GetName();
 	virtual std::unordered_set<int>& GetViewlist();
-	virtual short GetX() const;
-	virtual short GetY() const;
 	virtual std::mutex& GetViewlock();
-	short getHP() const;
 	short getLevel() const;
 	int getExp() const;
 	unsigned char* getPacketStart();

@@ -2,7 +2,6 @@
 #include"CCharacter.h"
 class CMonster : public CCharacter
 {
-	short level{ 0 };
 	lua_State* L;
 	std::mutex lua_l;
 public:

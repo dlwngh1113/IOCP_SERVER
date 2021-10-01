@@ -112,7 +112,7 @@ void CServer::worker_thread()
 			delete over_ex;
 			break;
 		case OP_RANDOM_MOVE:
-			if (reinterpret_cast<CClient*>(characters[key])->getHP() > 0)
+			if (reinterpret_cast<CClient*>(characters[key])->GetInfo()->hp > 0)
 				npcController->random_move_npc(key);
 			delete over_ex;
 			break;
@@ -174,8 +174,8 @@ void CServer::wake_up_npc(int id)
 
 bool CServer::is_near(int p1, int p2)
 {
-	int dist = (characters[p1]->GetX() - characters[p2]->GetX()) * (characters[p1]->GetX() - characters[p2]->GetX());
-	dist += (characters[p1]->GetY() - characters[p2]->GetY()) * (characters[p1]->GetY() - characters[p2]->GetY());
+	int dist = (characters[p1]->GetInfo()->x - characters[p2]->GetInfo()->x) * (characters[p1]->GetInfo()->x - characters[p2]->GetInfo()->x);
+	dist += (characters[p1]->GetInfo()->y - characters[p2]->GetInfo()->y) * (characters[p1]->GetInfo()->y - characters[p2]->GetInfo()->y);
 
 	return dist <= VIEW_LIMIT * VIEW_LIMIT;
 }
@@ -187,8 +187,8 @@ bool CServer::is_npc(int id)
 
 bool CServer::isIn_atkRange(int p1, int p2)
 {
-	int dist = (characters[p1]->GetX() - characters[p2]->GetX()) * (characters[p1]->GetX() - characters[p2]->GetX());
-	dist += (characters[p1]->GetY() - characters[p2]->GetY()) * (characters[p1]->GetY() - characters[p2]->GetY());
+	int dist = (characters[p1]->GetInfo()->x - characters[p2]->GetInfo()->x) * (characters[p1]->GetInfo()->x - characters[p2]->GetInfo()->x);
+	dist += (characters[p1]->GetInfo()->y - characters[p2]->GetInfo()->y) * (characters[p1]->GetInfo()->y - characters[p2]->GetInfo()->y);
 
 	return dist <= 1;
 }
@@ -259,12 +259,12 @@ void CServer::process_packet(int id)
 void CServer::process_login(cs_packet_login* p, int id)
 {
 	auto client = reinterpret_cast<CClient*>(characters[id]);
-	client->GetName() = p->name;
+	client->GetInfo()->name = p->name;
 	for (const auto& c : characters)
 	{
 		if (id != c.first)
 		{
-			if (strcmp(c.second->GetName().c_str(), client->GetName().c_str()) != 0);
+			if (strcmp(c.second->GetInfo()->name.c_str(), client->GetInfo()->name.c_str()) != 0);
 			else
 			{
 				client->send_login_fail();
@@ -302,8 +302,8 @@ void CServer::process_login(cs_packet_login* p, int id)
 void CServer::process_move(int id, char dir)
 {
 	auto client = reinterpret_cast<CClient*>(characters[id]);
-	short y = client->GetY();
-	short x = client->GetX();
+	short y = client->GetInfo()->x;
+	short x = client->GetInfo()->y;
 	switch (dir) {
 	case MV_UP: if (y > 0)
 		client->Move(0, -1);
@@ -391,17 +391,22 @@ void CServer::process_move(int id, char dir)
 
 void CServer::process_attack(int id)
 {
-	for (auto& i : characters[id]->GetViewlist())
+	auto client = reinterpret_cast<CClient*>(characters[id]);
+	for (auto& i : client->GetViewlist())
 		if (isIn_atkRange(id, i)) {
 			if (is_npc(i)) {
 				char mess[MAX_STR_LEN];
-				g_clients[i].HitByPlayer(mess);
-				g_clients[id].send_chat_packet(id, mess);
+				if (characters[i]->GetDamage(client->GetInfo()->atk))
+				{
+					sprintf_s(mess, MAX_STR_LEN, "%s had %d damage. %d left",
+						characters[i]->GetInfo()->name.c_str(), client->GetInfo()->atk, characters[i]->GetInfo()->hp);
+				}
+				client->send_chat_packet(i, mess);
 
-				if (g_clients[i].getHP() <= 0) {
+				if (characters[i]->GetInfo()->hp <= 0) {
 					timer->add_timer(i, OP_REVIVAL, std::chrono::system_clock::now() + std::chrono::seconds(30));
 					sprintf_s(mess, "%s has dead, %d exp gain",
-						g_clients[i].getName(), g_clients[i].getLevel() * 10);
+						characters[i]->GetInfo()->name.c_str(), characters[i]->GetInfo()->hp * 10);
 				}
 			}
 		}
