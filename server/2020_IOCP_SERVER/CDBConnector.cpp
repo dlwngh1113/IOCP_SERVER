@@ -37,12 +37,12 @@ void CDBConnector::set_userdata(CClient* client, bool isInit)
 	dbRetcode = SQLAllocHandle(SQL_HANDLE_STMT, hdbc, &hstmt);
 	wchar_t tmp[MAX_STR_LEN] = { NULL };
 
-	int nChars = MultiByteToWideChar(CP_ACP, 0, client->getName(), -1, NULL, 0);
+	int nChars = MultiByteToWideChar(CP_ACP, 0, client->GetInfo()->name.c_str(), -1, NULL, 0);
 	wchar_t* nameWchar = new wchar_t[nChars];
-	MultiByteToWideChar(CP_ACP, 0, client->getName(), -1, (LPWSTR)nameWchar, nChars);
+	MultiByteToWideChar(CP_ACP, 0, client->GetInfo()->name.c_str(), -1, (LPWSTR)nameWchar, nChars);
 
 	if (isInit) {
-		client->SetInfo(client->getName(), 1, 0, 0, 0, 100);
+		client->SetInfo(client->GetInfo()->name.c_str(), 1, 0, 0, 0, 100);
 		wsprintf(tmp, L"EXEC insert_player %s", nameWchar);
 
 		dbRetcode = SQLExecDirect(hstmt, (SQLWCHAR*)tmp, SQL_NTS);
@@ -53,11 +53,11 @@ void CDBConnector::set_userdata(CClient* client, bool isInit)
 	//이름, 레벨, x, y, exp
 	wsprintf(tmp, L"EXEC set_userdata %s, %d, %hd, %hd, %d, %hd",
 		nameWchar,
-		client->getLevel(),
-		client->getX(),
-		client->getY(),
-		client->getExp(),
-		client->getHP());
+		client->GetInfo()->name.c_str(),
+		client->GetInfo()->level,
+		client->GetInfo()->x,
+		client->GetInfo()->y,
+		client->GetInfo()->exp);
 
 	dbRetcode = SQLExecDirect(hstmt, (SQLWCHAR*)tmp, SQL_NTS);
 

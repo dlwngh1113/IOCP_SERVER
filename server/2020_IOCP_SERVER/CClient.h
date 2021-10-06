@@ -1,5 +1,5 @@
 #pragma once
-#include"CMonster.h"
+#include"CCharacter.h"
 
 class CClient : public CCharacter
 {
@@ -20,7 +20,7 @@ public:
 #pragma endregion
 
 #pragma region setter
-	void SetInfo(char* name, short level, short x, short y, int exp, short hp);
+	void SetInfo(const char* name, short level, short x, short y, int exp, short hp);
 	virtual void Teleport(short x, short y);
 #pragma endregion
 

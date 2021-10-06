@@ -28,7 +28,7 @@ CClient::~CClient()
 {
 }
 
-void CClient::SetInfo(char* name, short level, short x, short y, int exp, short hp)
+void CClient::SetInfo(const char* name, short level, short x, short y, int exp, short hp)
 {
 	this->c_lock.lock();
 	GetInfo()->name = name;
