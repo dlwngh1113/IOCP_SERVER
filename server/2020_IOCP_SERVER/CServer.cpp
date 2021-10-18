@@ -68,10 +68,10 @@ void CServer::initialize_NPC()
 		auto monster = new CMonster(i, npc_name, rand() % WORLD_WIDTH, rand() % WORLD_HEIGHT, rand() % 10 + 1);
 		characters[i] = monster;
 
-		lua_register(g_clients[i].getLua(), "API_SendEnterMessage", API_SendEnterMessage);
-		lua_register(g_clients[i].getLua(), "API_SendLeaveMessage", API_SendLeaveMessage);
-		lua_register(g_clients[i].getLua(), "API_get_x", API_get_x);
-		lua_register(g_clients[i].getLua(), "API_get_y", API_get_y);
+		lua_register(monster->GetLua(), "API_SendEnterMessage", API_SendEnterMessage);
+		lua_register(monster->GetLua(), "API_SendLeaveMessage", API_SendLeaveMessage);
+		lua_register(monster->GetLua(), "API_get_x", API_get_x);
+		lua_register(monster->GetLua(), "API_get_y", API_get_y);
 	}
 	std::cout << "NPC initialize finished.\n";
 }
@@ -239,8 +239,8 @@ void CServer::process_packet(int id)
 	case CS_ATTACK:
 	{
 		cs_packet_attack* p = reinterpret_cast<cs_packet_attack*>(client->getPacketStart());
-		if (client->getAtktime() < p->atk_time) {
-			client->getAtktime() = p->atk_time;
+		if (client->GetInfo()->atk_time < p->atk_time) {
+			client->GetInfo()->atk_time = p->atk_time;
 			process_attack(id);
 		}
 	}
@@ -425,7 +425,7 @@ int CServer::API_get_y(lua_State* L)
 {
 	int user_id = lua_tointeger(L, -1);
 	lua_pop(L, 2);
-	int y = g_clients[user_id].getY();
+	int y = characters[user_id]->GetInfo()->y;
 	lua_pushnumber(L, y);
 	return 1;
 }
@@ -438,25 +438,21 @@ int CServer::API_SendEnterMessage(lua_State* L)
 
 	lua_pop(L, 3);
 
-	if (std::chrono::system_clock::now().time_since_epoch().count() > g_clients[my_id].getAtktime())
+	auto monster = reinterpret_cast<CMonster*>(characters[my_id]);
+	auto client = reinterpret_cast<CClient*>(characters[user_id]);
+
+	if (std::chrono::system_clock::now().time_since_epoch().count() > monster->GetInfo()->atk_time)
 	{
-		g_clients[my_id].getAtktime() = std::chrono::system_clock::now().time_since_epoch().count();
-		g_clients[user_id].hp -= 10;
+		monster->GetInfo()->atk_time = std::chrono::system_clock::now().time_since_epoch().count();
+		client->GetDamage(monster->GetInfo()->atk);
 
-		if (g_clients[user_id].getHP() <= 0) {
-			g_clients[user_id].SetInfo(g_clients[user_id].getName(),
-				g_clients[user_id].getLevel(),
-				0, 0, g_clients[user_id].getExp() / 2,
-				g_clients[user_id].getLevel() * 70);
-		}
-
-		g_clients[user_id].send_stat_change();
+		client->send_stat_change();
 		char tmp[MAX_STR_LEN];
-		sprintf_s(tmp, "You hit by id - %s", g_clients[my_id].getName());
-		g_clients[user_id].send_chat_packet(user_id, tmp);
+		sprintf_s(tmp, "You hit by id - %s", monster->GetInfo()->name.c_str());
+		client->send_chat_packet(user_id, tmp);
 	}
 
-	g_clients[user_id].send_chat_packet(my_id, mess);
+	client->send_chat_packet(my_id, mess);
 	return 0;
 }
 

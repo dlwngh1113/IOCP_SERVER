@@ -13,6 +13,8 @@ public:
 	short level{ 0 };
 	int exp;
 
+	int atk_time{ 0 };
+
 	CInfo() = default;
 	CInfo(int id, std::string name, short x, short y);
 	virtual ~CInfo();

@@ -259,11 +259,6 @@ void CClient::send_packet(void* p)
 	this->c_lock.unlock();
 }
 
-int& CClient::getAtktime()
-{
-	return atk_time;
-}
-
 int& CClient::getMoveTime()
 {
 	return move_time;

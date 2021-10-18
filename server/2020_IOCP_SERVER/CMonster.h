@@ -10,6 +10,8 @@ public:
 	CMonster(CInfo* info);
 	virtual ~CMonster();
 
+	lua_State* GetLua();
+
 	virtual void Move(short dx, short dy);
 	virtual void Teleport(short x, short y);
 

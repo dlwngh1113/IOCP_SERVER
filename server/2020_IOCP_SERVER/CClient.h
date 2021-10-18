@@ -9,7 +9,6 @@ class CClient : public CCharacter
 	unsigned char* m_recv_start;
 
 	int move_time;
-	int atk_time;
 
 	void send_packet(void* p);
 public:
@@ -25,7 +24,6 @@ public:
 #pragma endregion
 
 #pragma region	ref
-	int& getAtktime();
 	int& getMoveTime();
 #pragma endregion
 	CClient();

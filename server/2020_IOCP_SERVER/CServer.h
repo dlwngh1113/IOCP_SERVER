@@ -1,5 +1,4 @@
 #pragma once
-#include"framework.h"
 #include"CClient.h"
 #include"CMonster.h"
 #include"CTimer.h"
@@ -8,7 +7,7 @@
 
 class CServer
 {
-	std::unordered_map<int, CCharacter*> characters;
+	static std::unordered_map<int, CCharacter*> characters;
 	HANDLE		h_iocp;
 
 	SOCKET g_lSocket;
@@ -16,7 +15,7 @@ class CServer
 
 	std::mutex id_lock;
 
-	CTimer* timer;
+	static CTimer* timer;
 	CNPCController* npcController;
 	CDBConnector* dbConnector;
 public:
@@ -41,9 +40,8 @@ public:
 	void process_move(int id, char dir);
 	void process_attack(int id);
 
-	int API_get_x(lua_State* L);
-	int API_get_y(lua_State* L);
-	int API_SendEnterMessage(lua_State* L);
-	int API_SendLeaveMessage(lua_State* L);
+	static int API_get_x(lua_State* L);
+	static int API_get_y(lua_State* L);
+	static int API_SendEnterMessage(lua_State* L);
+	static int API_SendLeaveMessage(lua_State* L);
 };
-

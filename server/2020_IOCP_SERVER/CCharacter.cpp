@@ -33,6 +33,13 @@ bool CCharacter::GetDamage(short otherAtk)
     {
         c_lock.lock();
         info->hp -= otherAtk;
+        if (info->hp <= 0)
+        {
+            info->x = 0;
+            info->y = 0;
+            info->exp /= 2;
+            info->hp = info->level * 70;
+        }
         c_lock.unlock();
         return true;
     }

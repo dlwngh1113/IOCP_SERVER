@@ -17,6 +17,11 @@ CMonster::~CMonster()
 {
 }
 
+lua_State* CMonster::GetLua()
+{
+	return L;
+}
+
 void CMonster::Move(short dx, short dy)
 {
 	CCharacter::Move(dx, dy);
