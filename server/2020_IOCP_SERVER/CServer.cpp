@@ -2,7 +2,7 @@
 
 CServer::CServer()
 {
-	timer = new CTimer();
+	timer = new CTimer(h_iocp);
 	npcController = new CNPCController();
 	dbConnector = new CDBConnector();
 }
@@ -122,7 +122,19 @@ void CServer::worker_thread()
 			break;
 		case OP_HEAL:
 		{
+			reinterpret_cast<CClient*>(characters[key])->AutoHeal();
 			timer->add_timer(key, OP_HEAL, std::chrono::system_clock::now() + std::chrono::seconds(5));
+			delete over_ex;
+		}
+			break;
+		case OP_REVIVAL:
+		{
+			auto player = reinterpret_cast<CClient*>(characters[key]);
+			player->GetInfo()->level = rand() % 10 + 1;
+			player->GetInfo()->hp = player->GetInfo()->level * 100;
+			for (int i = 0; i < MAX_USER; ++i)
+				if (is_near(key, i))
+					player->EnterPlayer(characters[i]);
 			delete over_ex;
 		}
 			break;
@@ -221,16 +233,17 @@ void CServer::process_packet(int id)
 	{
 		cs_packet_login* p = reinterpret_cast<cs_packet_login*>(client->getPacketStart());
 		process_login(p, id);
-		break;
 	}
-	case CS_MOVE: {
+	break;
+	case CS_MOVE: 
+	{
 		cs_packet_move* p = reinterpret_cast<cs_packet_move*>(client->getPacketStart());
 		if (client->getMoveTime() < p->move_time) {
 			client->getMoveTime() = p->move_time;
 			process_move(id, p->direction);
 		}
 	}
-				break;
+	break;
 	case CS_LOGOUT:
 	{
 		disconnect_client(id);

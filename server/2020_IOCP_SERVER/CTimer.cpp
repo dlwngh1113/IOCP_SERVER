@@ -1,6 +1,6 @@
 #include "CTimer.h"
 
-CTimer::CTimer()
+CTimer::CTimer(HANDLE h_iocp) : h_iocp{ h_iocp }
 {
 }
 
@@ -34,11 +34,9 @@ void CTimer::time_worker()
 				{
 				case OP_RANDOM_MOVE:
 				{
-					//random_move_npc(ev.obj_id);
 					OVER_EX* over_ex = new OVER_EX;
 					over_ex->op_mode = OP_RANDOM_MOVE;
 					PostQueuedCompletionStatus(h_iocp, 1, ev.obj_id, &over_ex->wsa_over);
-					//add_timer(ev.obj_id, OP_RANDOM_MOVE, system_clock::now() + 1s);
 				}
 				break;
 				case OP_RUNAWAY:
@@ -48,18 +46,8 @@ void CTimer::time_worker()
 				break;
 				case OP_REVIVAL:
 				{
-					g_clients[ev.obj_id].level = rand() % 10 + 1;
-					g_clients[ev.obj_id].hp = g_clients[ev.obj_id].level * 100;
-					for (int i = 0; i < MAX_USER; ++i) {
-						if (is_near(ev.obj_id, i) && g_clients[i].in_use) {
-							g_clients[i].vl.lock();
-							g_clients[i].view_list.insert(ev.obj_id);
-							send_enter_packet(i, ev.obj_id);
-							g_clients[i].vl.unlock();
-						}
-					}
 					OVER_EX* over_ex = new OVER_EX;
-					over_ex->op_mode = OP_RANDOM_MOVE;
+					over_ex->op_mode = OP_REVIVAL;
 					PostQueuedCompletionStatus(h_iocp, 1, ev.obj_id, &over_ex->wsa_over);
 				}
 				break;
@@ -81,14 +69,6 @@ void CTimer::time_worker()
 	}
 }
 
-bool CTimer::is_near(int p1, int p2)
-{
-	int dist = (g_clients[p1].x - g_clients[p2].x) * (g_clients[p1].x - g_clients[p2].x);
-	dist += (g_clients[p1].y - g_clients[p2].y) * (g_clients[p1].y - g_clients[p2].y);
-
-	return dist <= VIEW_LIMIT * VIEW_LIMIT;
-}
-
 void CTimer::send_chat_packet(int to_client, int id, char* mess)
 {
 	sc_packet_chat p;
@@ -96,21 +76,6 @@ void CTimer::send_chat_packet(int to_client, int id, char* mess)
 	p.size = sizeof(p);
 	p.type = SC_PACKET_CHAT;
 	strcpy_s(p.message, mess);
-	send_packet(to_client, &p);
-}
-
-void CTimer::send_enter_packet(int to_client, int new_id)
-{
-	sc_packet_enter p;
-	p.id = new_id;
-	p.size = sizeof(p);
-	p.type = SC_PACKET_ENTER;
-	p.x = g_clients[new_id].x;
-	p.y = g_clients[new_id].y;
-	g_clients[new_id].c_lock.lock();
-	strcpy_s(p.name, g_clients[new_id].name);
-	g_clients[new_id].c_lock.unlock();
-	p.o_type = 0;
 	send_packet(to_client, &p);
 }
 
