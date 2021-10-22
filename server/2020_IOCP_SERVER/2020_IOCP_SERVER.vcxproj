@@ -148,7 +148,9 @@
     <ClCompile Include="CNPCController.cpp" />
     <ClCompile Include="CServer.cpp" />
     <ClCompile Include="CTimer.cpp" />
-    <ClCompile Include="iocp_server.cpp" />
+    <ClCompile Include="iocp_server.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CCharacter.h" />

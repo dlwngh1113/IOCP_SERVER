@@ -8,8 +8,6 @@ class CClient : public CCharacter
 	unsigned char* m_packet_start;
 	unsigned char* m_recv_start;
 
-	int move_time;
-
 	void send_packet(void* p);
 public:
 #pragma region getter
@@ -47,7 +45,7 @@ public:
 	void send_heal_packet(char* mess);
 	void send_leave_packet(int targetID);
 	void send_enter_packet(CCharacter* other);
-	void send_move_packet(CClient* other);
+	void send_move_packet(CCharacter* other);
 	void send_stat_change();
 	void send_chat_packet(int targetID, char* mess);
 };

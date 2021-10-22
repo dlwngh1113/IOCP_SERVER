@@ -157,15 +157,15 @@ void CClient::send_enter_packet(CCharacter* other)
 	send_packet(&p);
 }
 
-void CClient::send_move_packet(CClient* other)
+void CClient::send_move_packet(CCharacter* other)
 {
 	sc_packet_move p;
-	p.id = GetInfo()->id;
+	p.id = other->GetInfo()->id;
 	p.size = sizeof(p);
 	p.type = SC_PACKET_MOVE;
 	p.x = other->GetInfo()->x;
 	p.y = other->GetInfo()->y;
-	p.move_time = other->move_time;
+	p.move_time = other->GetInfo()->move_time;
 	send_packet(&p);
 }
 
@@ -257,11 +257,6 @@ void CClient::send_packet(void* p)
 	WSASend(this->m_sock, &send_over->wsa_buf, 1,
 		NULL, 0, &send_over->wsa_over, NULL);
 	this->c_lock.unlock();
-}
-
-int& CClient::getMoveTime()
-{
-	return move_time;
 }
 
 unsigned char* CClient::getPacketStart()

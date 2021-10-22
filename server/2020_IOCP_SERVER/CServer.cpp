@@ -3,14 +3,14 @@
 CServer::CServer()
 {
 	timer = new CTimer(h_iocp);
-	npcController = new CNPCController();
+	//npcController = new CNPCController();
 	dbConnector = new CDBConnector();
 }
 
 CServer::~CServer()
 {
 	delete timer;
-	delete npcController;
+	//delete npcController;
 	delete dbConnector;
 }
 
@@ -42,14 +42,14 @@ void CServer::run()
 
 	initialize_NPC();
 
-	//thread ai_thread{ npc_ai_thread };
+	std::thread ai_thread{ &npc_ai_thread };
 	timer = new CTimer;
 	std::vector <std::thread> worker_threads;
 	for (int i = 0; i < 4; ++i)
 		worker_threads.emplace_back(&worker_thread);
 	for (auto& th : worker_threads)
 		th.join();
-	//ai_thread.join();
+	ai_thread.join();
 	timer->join();
 
 	dbConnector->Release();
@@ -113,7 +113,8 @@ void CServer::worker_thread()
 			break;
 		case OP_RANDOM_MOVE:
 			if (reinterpret_cast<CClient*>(characters[key])->GetInfo()->hp > 0)
-				npcController->random_move_npc(key);
+				//npcController->random_move_npc(key);
+				random_move_npc(key);
 			delete over_ex;
 			break;
 		case OP_PLAYER_MOVE_NOTIFY:
@@ -139,6 +140,88 @@ void CServer::worker_thread()
 		}
 			break;
 		}
+	}
+}
+
+void CServer::npc_ai_thread()
+{
+	while (true) {
+		auto start_time = std::chrono::system_clock::now();
+		for (int i = MAX_USER; i < MAX_USER + NUM_NPC; ++i)
+			if (characters[i]->GetInfo()->hp > 0)
+				random_move_npc(i);
+		auto end_time = std::chrono::system_clock::now();
+		auto exec_time = end_time - start_time;
+		std::cout << "AI exec time = " << std::chrono::duration_cast<std::chrono::seconds>(exec_time).count() << "s\n";
+		std::this_thread::sleep_for(std::chrono::seconds(1) - (end_time - start_time));
+	}
+}
+
+void CServer::random_move_npc(int id)
+{
+	std::unordered_set <int> old_viewlist;
+	for (const auto& pl : characters)
+	{
+		if (is_near(id, pl.first) && pl.first < MAX_USER)
+			old_viewlist.insert(pl.first);
+	}
+	int x = characters[id]->GetInfo()->x;
+	int y = characters[id]->GetInfo()->y;
+	switch (rand() % 4)
+	{
+	case 0: if (x > 0) x--; break;
+	case 1: if (x < (WORLD_WIDTH - 1)) x++; break;
+	case 2: if (y > 0) y--; break;
+	case 3: if (y < (WORLD_HEIGHT - 1)) y++; break;
+	}
+	characters[id]->GetInfo()->x = x;
+	characters[id]->GetInfo()->y = y;
+	std::unordered_set <int> new_viewlist;
+	for (const auto& pl : characters)
+	{
+		if (is_near(id, pl.first) && pl.first < MAX_USER)
+			new_viewlist.insert(pl.first);
+	}
+
+	for (auto pl : old_viewlist) {
+		auto player = reinterpret_cast<CClient*>(characters[pl]);
+		if (0 < new_viewlist.count(pl)) {
+			if (0 < player->GetViewlist().count(id))
+				player->send_move_packet(characters[id]);
+			else {
+				player->GetViewlist().insert(id);
+				player->send_enter_packet(characters[id]);
+			}
+		}
+		else
+		{
+			if (0 < player->GetViewlist().count(id)) {
+				player->GetViewlist().erase(id);
+				player->send_leave_packet(id);
+			}
+		}
+	}
+
+	for (auto pl : new_viewlist) {
+		auto player = reinterpret_cast<CClient*>(characters[pl]);
+		if (0 == player->GetViewlist().count(pl)) {
+			if (0 == player->GetViewlist().count(id)) {
+				player->GetViewlist().insert(id);
+				player->send_enter_packet(characters[id]);
+			}
+			else
+				player->send_move_packet(characters[id]);
+		}
+	}
+
+	if (!new_viewlist.empty())
+		timer->add_timer(id, OP_RANDOM_MOVE, std::chrono::system_clock::now() + std::chrono::seconds(1));
+
+	for (auto pc : new_viewlist) {
+		OVER_EX* over_ex = new OVER_EX;
+		over_ex->object_id = pc;
+		over_ex->op_mode = OP_PLAYER_MOVE_NOTIFY;
+		PostQueuedCompletionStatus(h_iocp, 1, id, &over_ex->wsa_over);
 	}
 }
 

@@ -76,7 +76,7 @@ void CTimer::send_chat_packet(int to_client, int id, char* mess)
 	p.size = sizeof(p);
 	p.type = SC_PACKET_CHAT;
 	strcpy_s(p.message, mess);
-	send_packet(to_client, &p);
+	//send_packet(to_client, &p);
 }
 
 void CTimer::join()

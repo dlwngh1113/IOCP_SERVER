@@ -14,6 +14,7 @@ public:
 	int exp;
 
 	int atk_time{ 0 };
+	int move_time{ 0 };
 
 	CInfo() = default;
 	CInfo(int id, std::string name, short x, short y);
