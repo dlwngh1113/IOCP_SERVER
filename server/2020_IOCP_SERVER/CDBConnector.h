@@ -1,6 +1,7 @@
 #pragma once
 #include"framework.h"
-#include"CClient.h"
+
+class CClient;
 
 class CDBConnector
 {

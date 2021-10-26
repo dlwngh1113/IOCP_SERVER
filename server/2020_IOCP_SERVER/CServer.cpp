@@ -3,14 +3,12 @@
 CServer::CServer()
 {
 	timer = new CTimer(h_iocp);
-	//npcController = new CNPCController();
 	dbConnector = new CDBConnector();
 }
 
 CServer::~CServer()
 {
 	delete timer;
-	//delete npcController;
 	delete dbConnector;
 }
 
@@ -21,32 +19,32 @@ void CServer::run()
 	dbConnector->Init();
 
 	WSADATA WSAData;
-	WSAStartup(MAKEWORD(2, 0), &WSAData);
+	::WSAStartup(MAKEWORD(2, 0), &WSAData);
 	h_iocp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, 0);
-	g_lSocket = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
+	g_lSocket = ::WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
 	CreateIoCompletionPort(reinterpret_cast<HANDLE>(g_lSocket), h_iocp, KEY_SERVER, 0);
 
 	SOCKADDR_IN serverAddr;
 	memset(&serverAddr, 0, sizeof(SOCKADDR_IN));
 	serverAddr.sin_family = AF_INET;
-	serverAddr.sin_port = htons(SERVER_PORT);
+	serverAddr.sin_port = ::htons(SERVER_PORT);
 	serverAddr.sin_addr.s_addr = INADDR_ANY;
 	::bind(g_lSocket, (sockaddr*)&serverAddr, sizeof(serverAddr));
-	listen(g_lSocket, 5);
+	::listen(g_lSocket, 5);
 
-	SOCKET cSocket = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
+	SOCKET cSocket = ::WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
 	g_accept_over.op_mode = OP_MODE_ACCEPT;
 	g_accept_over.wsa_buf.len = static_cast<int>(cSocket);
 	ZeroMemory(&g_accept_over.wsa_over, sizeof(&g_accept_over.wsa_over));
-	AcceptEx(g_lSocket, cSocket, g_accept_over.iocp_buf, 0, 32, 32, NULL, &g_accept_over.wsa_over);
+	::AcceptEx(g_lSocket, cSocket, g_accept_over.iocp_buf, 0, 32, 32, NULL, &g_accept_over.wsa_over);
 
 	initialize_NPC();
 
-	std::thread ai_thread{ &npc_ai_thread };
+	std::thread ai_thread{ [&]() {npc_ai_thread(); } };
 	timer = new CTimer;
 	std::vector <std::thread> worker_threads;
 	for (int i = 0; i < 4; ++i)
-		worker_threads.emplace_back(&worker_thread);
+		worker_threads.emplace_back([&]() {worker_thread(); });
 	for (auto& th : worker_threads)
 		th.join();
 	ai_thread.join();
@@ -54,7 +52,7 @@ void CServer::run()
 
 	dbConnector->Release();
 	closesocket(g_lSocket);
-	WSACleanup();
+	::WSACleanup();
 }
 
 void CServer::initialize_NPC()
@@ -68,7 +66,7 @@ void CServer::initialize_NPC()
 		auto monster = new CMonster(i, npc_name, rand() % WORLD_WIDTH, rand() % WORLD_HEIGHT, rand() % 10 + 1);
 		characters[i] = monster;
 
-		lua_register(monster->GetLua(), "API_SendEnterMessage", API_SendEnterMessage);
+		lua_register(monster->GetLua(), "API_SendEnterMessage", [&](lua_State* l) {API_SendEnterMessage(l); });
 		lua_register(monster->GetLua(), "API_SendLeaveMessage", API_SendLeaveMessage);
 		lua_register(monster->GetLua(), "API_get_x", API_get_x);
 		lua_register(monster->GetLua(), "API_get_y", API_get_y);
@@ -152,7 +150,7 @@ void CServer::npc_ai_thread()
 				random_move_npc(i);
 		auto end_time = std::chrono::system_clock::now();
 		auto exec_time = end_time - start_time;
-		std::cout << "AI exec time = " << std::chrono::duration_cast<std::chrono::seconds>(exec_time).count() << "s\n";
+		//std::cout << "AI exec time = " << std::chrono::duration_cast<std::chrono::seconds>(exec_time).count() << "s\n";
 		std::this_thread::sleep_for(std::chrono::seconds(1) - (end_time - start_time));
 	}
 }
@@ -246,11 +244,11 @@ void CServer::add_new_client(SOCKET ns)
 		timer->add_timer(i, OP_HEAL, std::chrono::system_clock::now() + std::chrono::seconds(5));
 	}
 
-	SOCKET cSocket = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
+	SOCKET cSocket = ::WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
 	g_accept_over.op_mode = OP_MODE_ACCEPT;
 	g_accept_over.wsa_buf.len = static_cast<ULONG> (cSocket);
 	ZeroMemory(&g_accept_over.wsa_over, sizeof(&g_accept_over.wsa_over));
-	AcceptEx(g_lSocket, cSocket, g_accept_over.iocp_buf, 0, 32, 32, NULL, &g_accept_over.wsa_over);
+	::AcceptEx(g_lSocket, cSocket, g_accept_over.iocp_buf, 0, 32, 32, NULL, &g_accept_over.wsa_over);
 }
 
 void CServer::disconnect_client(int id)
@@ -321,8 +319,8 @@ void CServer::process_packet(int id)
 	case CS_MOVE: 
 	{
 		cs_packet_move* p = reinterpret_cast<cs_packet_move*>(client->getPacketStart());
-		if (client->getMoveTime() < p->move_time) {
-			client->getMoveTime() = p->move_time;
+		if (client->GetInfo()->move_time < p->move_time) {
+			client->GetInfo()->move_time = p->move_time;
 			process_move(id, p->direction);
 		}
 	}

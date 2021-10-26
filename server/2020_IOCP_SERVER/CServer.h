@@ -2,12 +2,12 @@
 #include"CClient.h"
 #include"CMonster.h"
 #include"CTimer.h"
-#include"CNPCController.h"
 #include"CDBConnector.h"
 
 class CServer
 {
-	static std::unordered_map<int, CCharacter*> characters;
+	CTimer* timer;
+	std::unordered_map<int, CCharacter*> characters;
 	HANDLE		h_iocp;
 
 	SOCKET g_lSocket;
@@ -15,8 +15,6 @@ class CServer
 
 	std::mutex id_lock;
 
-	static CTimer* timer;
-	//CNPCController* npcController;
 	CDBConnector* dbConnector;
 public:
 	CServer();
@@ -42,8 +40,8 @@ public:
 	void process_move(int id, char dir);
 	void process_attack(int id);
 
-	static int API_get_x(lua_State* L);
-	static int API_get_y(lua_State* L);
-	static int API_SendEnterMessage(lua_State* L);
-	static int API_SendLeaveMessage(lua_State* L);
+	int API_get_x(lua_State* L);
+	int API_get_y(lua_State* L);
+	int API_SendEnterMessage(lua_State* L);
+	int API_SendLeaveMessage(lua_State* L);
 };

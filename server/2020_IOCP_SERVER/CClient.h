@@ -21,8 +21,6 @@ public:
 	virtual void Teleport(short x, short y);
 #pragma endregion
 
-#pragma region	ref
-	int& getMoveTime();
 #pragma endregion
 	CClient();
 	CClient(int id, std::string name, short x, short y, SOCKET s);

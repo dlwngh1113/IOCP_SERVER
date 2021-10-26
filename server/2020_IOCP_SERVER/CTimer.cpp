@@ -81,6 +81,6 @@ void CTimer::send_chat_packet(int to_client, int id, char* mess)
 
 void CTimer::join()
 {
-	std::thread timer_thread{ &time_worker };
+	std::thread timer_thread([&]() {time_worker(); });
 	timer_thread.join();
 }

@@ -145,12 +145,12 @@
     <ClCompile Include="CEvent.cpp" />
     <ClCompile Include="CInfo.cpp" />
     <ClCompile Include="CMonster.cpp" />
-    <ClCompile Include="CNPCController.cpp" />
     <ClCompile Include="CServer.cpp" />
     <ClCompile Include="CTimer.cpp" />
     <ClCompile Include="iocp_server.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CCharacter.h" />
@@ -159,7 +159,6 @@
     <ClInclude Include="CEvent.h" />
     <ClInclude Include="CInfo.h" />
     <ClInclude Include="CMonster.h" />
-    <ClInclude Include="CNPCController.h" />
     <ClInclude Include="CServer.h" />
     <ClInclude Include="CTimer.h" />
     <ClInclude Include="framework.h" />

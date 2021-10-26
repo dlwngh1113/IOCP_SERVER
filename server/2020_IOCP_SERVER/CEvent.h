@@ -1,5 +1,5 @@
 #pragma once
-#include<chrono>
+#include"framework.h"
 class CEvent
 {
 public:

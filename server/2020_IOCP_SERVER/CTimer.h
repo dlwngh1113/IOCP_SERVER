@@ -1,6 +1,6 @@
 #pragma once
-#include"framework.h"
 #include"CEvent.h"
+
 class CTimer
 {
 	HANDLE h_iocp;

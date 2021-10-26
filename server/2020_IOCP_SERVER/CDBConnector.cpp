@@ -1,4 +1,5 @@
 #include "CDBConnector.h"
+#include"CClient.h"
 
 CDBConnector::CDBConnector()
 {
