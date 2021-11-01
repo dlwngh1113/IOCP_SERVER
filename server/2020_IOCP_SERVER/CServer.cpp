@@ -2,13 +2,12 @@
 
 CServer::CServer()
 {
-	timer = new CTimer(h_iocp);
+	CTimer::GetInstance()->SetHandle(h_iocp);
 	dbConnector = new CDBConnector();
 }
 
 CServer::~CServer()
 {
-	delete timer;
 	delete dbConnector;
 }
 
@@ -41,14 +40,13 @@ void CServer::run()
 	initialize_NPC();
 
 	std::thread ai_thread{ [&]() {npc_ai_thread(); } };
-	timer = new CTimer;
 	std::vector <std::thread> worker_threads;
 	for (int i = 0; i < 4; ++i)
 		worker_threads.emplace_back([&]() {worker_thread(); });
 	for (auto& th : worker_threads)
 		th.join();
 	ai_thread.join();
-	timer->join();
+	CTimer::GetInstance()->join();
 
 	dbConnector->Release();
 	closesocket(g_lSocket);
@@ -66,7 +64,7 @@ void CServer::initialize_NPC()
 		auto monster = new CMonster(i, npc_name, rand() % WORLD_WIDTH, rand() % WORLD_HEIGHT, rand() % 10 + 1);
 		characters[i] = monster;
 
-		lua_register(monster->GetLua(), "API_SendEnterMessage", [&](lua_State* l) {API_SendEnterMessage(l); });
+		lua_register(monster->GetLua(), "API_SendEnterMessage", API_SendEnterMessage);
 		lua_register(monster->GetLua(), "API_SendLeaveMessage", API_SendLeaveMessage);
 		lua_register(monster->GetLua(), "API_get_x", API_get_x);
 		lua_register(monster->GetLua(), "API_get_y", API_get_y);
@@ -111,7 +109,6 @@ void CServer::worker_thread()
 			break;
 		case OP_RANDOM_MOVE:
 			if (reinterpret_cast<CClient*>(characters[key])->GetInfo()->hp > 0)
-				//npcController->random_move_npc(key);
 				random_move_npc(key);
 			delete over_ex;
 			break;
@@ -122,7 +119,7 @@ void CServer::worker_thread()
 		case OP_HEAL:
 		{
 			reinterpret_cast<CClient*>(characters[key])->AutoHeal();
-			timer->add_timer(key, OP_HEAL, std::chrono::system_clock::now() + std::chrono::seconds(5));
+			CTimer::GetInstance()->add_timer(key, OP_HEAL, std::chrono::system_clock::now() + std::chrono::seconds(5));
 			delete over_ex;
 		}
 			break;
@@ -213,7 +210,7 @@ void CServer::random_move_npc(int id)
 	}
 
 	if (!new_viewlist.empty())
-		timer->add_timer(id, OP_RANDOM_MOVE, std::chrono::system_clock::now() + std::chrono::seconds(1));
+		CTimer::GetInstance()->add_timer(id, OP_RANDOM_MOVE, std::chrono::system_clock::now() + std::chrono::seconds(1));
 
 	for (auto pc : new_viewlist) {
 		OVER_EX* over_ex = new OVER_EX;
@@ -241,7 +238,7 @@ void CServer::add_new_client(SOCKET ns)
 			rand() % WORLD_HEIGHT, ns);
 		CreateIoCompletionPort(reinterpret_cast<HANDLE>(ns), h_iocp, i, 0);
 		reinterpret_cast<CClient*>(characters[i])->StartRecv();
-		timer->add_timer(i, OP_HEAL, std::chrono::system_clock::now() + std::chrono::seconds(5));
+		CTimer::GetInstance()->add_timer(i, OP_HEAL, std::chrono::system_clock::now() + std::chrono::seconds(5));
 	}
 
 	SOCKET cSocket = ::WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
@@ -262,7 +259,7 @@ void CServer::disconnect_client(int id)
 
 void CServer::wake_up_npc(int id)
 {
-	timer->add_timer(id, OP_RANDOM_MOVE, std::chrono::system_clock::now() + std::chrono::seconds(1));
+	CTimer::GetInstance()->add_timer(id, OP_RANDOM_MOVE, std::chrono::system_clock::now() + std::chrono::seconds(1));
 }
 
 bool CServer::is_near(int p1, int p2)
@@ -498,7 +495,7 @@ void CServer::process_attack(int id)
 				client->send_chat_packet(i, mess);
 
 				if (characters[i]->GetInfo()->hp <= 0) {
-					timer->add_timer(i, OP_REVIVAL, std::chrono::system_clock::now() + std::chrono::seconds(30));
+					CTimer::GetInstance()->add_timer(i, OP_REVIVAL, std::chrono::system_clock::now() + std::chrono::seconds(30));
 					sprintf_s(mess, "%s has dead, %d exp gain",
 						characters[i]->GetInfo()->name.c_str(), characters[i]->GetInfo()->level * 10);
 				}
@@ -558,7 +555,7 @@ int CServer::API_SendLeaveMessage(lua_State* L)
 
 	lua_pop(L, 3);
 
-	timer->add_timer(my_id, OP_RUNAWAY, std::chrono::system_clock::now() + std::chrono::seconds(3), user_id, mess);
+	CTimer::GetInstance()->add_timer(my_id, OP_RUNAWAY, std::chrono::system_clock::now() + std::chrono::seconds(3), user_id, mess);
 
 	return 0;
 }

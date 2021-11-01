@@ -2,15 +2,17 @@
 
 CMonster::CMonster() :CCharacter()
 {
+	L = luaL_newstate();
 }
 
 CMonster::CMonster(int id, std::string name, short x, short y, short level) : CCharacter(id, name, x, y)
 {
+	L = luaL_newstate();
 }
 
 CMonster::CMonster(CInfo* info) : CCharacter{ info }
 {
-
+	L = luaL_newstate();
 }
 
 CMonster::~CMonster()

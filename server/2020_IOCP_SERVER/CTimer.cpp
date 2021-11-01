@@ -8,6 +8,11 @@ CTimer::~CTimer()
 {
 }
 
+void CTimer::SetHandle(HANDLE h_iocp)
+{
+	this->h_iocp = h_iocp;
+}
+
 void CTimer::add_timer(int obj_id, int ev_type, std::chrono::system_clock::time_point t, int target_id, char* mess)
 {
 	CEvent ev{ obj_id, t, ev_type, target_id, mess };
