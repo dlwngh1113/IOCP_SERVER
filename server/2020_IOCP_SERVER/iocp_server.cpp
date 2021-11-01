@@ -1,37 +1,6 @@
-//extern "C" {
-//#include "include/lua.h"
-//#include "include/lauxlib.h"
-//#include "include/lualib.h"
-//}
-//
 //#include"framework.h"
 //using namespace std;
 //using namespace chrono;
-//#pragma comment(lib, "Ws2_32.lib")
-//#pragma comment(lib, "MSWSock.lib")
-//#pragma comment(lib, "lua54.lib")
-//#pragma commint(lib, "odbc32")
-//
-//constexpr int MAX_BUFFER = 4096;
-//
-//constexpr char OP_MODE_RECV = 0;
-//constexpr char OP_MODE_SEND = 1;
-//constexpr char OP_MODE_ACCEPT = 2;
-//constexpr char OP_RANDOM_MOVE = 3;
-//constexpr char OP_PLAYER_MOVE_NOTIFY = 4;
-//constexpr char OP_RUNAWAY = 5;
-//constexpr char OP_REVIVAL = 6;
-//constexpr char OP_HEAL = 7;
-//
-//constexpr int  KEY_SERVER = 1000000;
-//
-//struct OVER_EX {
-//	WSAOVERLAPPED wsa_over;
-//	char	op_mode;
-//	WSABUF	wsa_buf;
-//	unsigned char iocp_buf[MAX_BUFFER];
-//	int		object_id;
-//};
 //
 //struct client_info {
 //	mutex c_lock;
@@ -69,94 +38,29 @@
 //SQLHSTMT hstmt = 0;
 //SQLRETURN dbRetcode;
 //
-////struct event_type {
-////	int obj_id;
-////	system_clock::time_point wakeup_time;
-////	int event_id;
-////	int target_id;
-////	char* message;
-////
-////	constexpr bool operator < (const event_type& _Left) const
-////	{
-////		return (wakeup_time > _Left.wakeup_time);
-////	}
-////};
-////
-////priority_queue<event_type> timer_queue;
-////mutex timer_l;
-////
-////void add_timer(int obj_id, int ev_type, system_clock::time_point t, int target_id = NULL, char* mess = NULL)
-////{
-////	event_type ev{ obj_id, t, ev_type, target_id, mess };
-////	timer_l.lock();
-////	timer_queue.push(ev);
-////	timer_l.unlock();
-////}
-////
-////void time_worker()
-////{
-////	while (true) {
-////		while (true) {
-////			if (false == timer_queue.empty()) {
-////				timer_l.lock();
-////				event_type ev = timer_queue.top();
-////				timer_l.unlock();
-////				if (ev.wakeup_time > system_clock::now())
-////					break;
-////				timer_l.lock();
-////				timer_queue.pop();
-////				timer_l.unlock();
-////
-////				switch (ev.event_id)
-////				{
-////				case OP_RANDOM_MOVE:
-////				{
-////					//random_move_npc(ev.obj_id);
-////					OVER_EX* over_ex = new OVER_EX;
-////					over_ex->op_mode = OP_RANDOM_MOVE;
-////					PostQueuedCompletionStatus(h_iocp, 1, ev.obj_id, &over_ex->wsa_over);
-////					//add_timer(ev.obj_id, OP_RANDOM_MOVE, system_clock::now() + 1s);
-////				}
-////					break;
-////				case OP_RUNAWAY:
-////				{
-////					send_chat_packet(ev.target_id, ev.obj_id, ev.message);
-////				}
-////					break;
-////				case OP_REVIVAL:
-////				{
-////					g_clients[ev.obj_id].level = rand() % 10 + 1;
-////					g_clients[ev.obj_id].hp = g_clients[ev.obj_id].level * 100;
-////					for (int i = 0; i < MAX_USER; ++i) {
-////						if (is_near(ev.obj_id, i) && g_clients[i].in_use) {
-////							g_clients[i].vl.lock();
-////							g_clients[i].view_list.insert(ev.obj_id);
-////							send_enter_packet(i, ev.obj_id);
-////							g_clients[i].vl.unlock();
-////						}
-////					}
-////					OVER_EX* over_ex = new OVER_EX;
-////					over_ex->op_mode = OP_RANDOM_MOVE;
-////					PostQueuedCompletionStatus(h_iocp, 1, ev.obj_id, &over_ex->wsa_over);
-////				}
-////				break;
-////				case OP_HEAL:
-////				{
-////					OVER_EX* over_ex = new OVER_EX;
-////					over_ex->op_mode = OP_HEAL;
-////					PostQueuedCompletionStatus(h_iocp, 1, ev.obj_id, &over_ex->wsa_over);
-////				}
-////					break;
-////				default:
-////					printf("Unknown event type: %c\n", ev.event_id);
-////					break;
-////				}
-////			}
-////			else break;
-////		}
-////		this_thread::sleep_for(1ms);
-////	}
-////}
+//struct event_type {
+//	int obj_id;
+//	system_clock::time_point wakeup_time;
+//	int event_id;
+//	int target_id;
+//	char* message;
+//
+//	constexpr bool operator < (const event_type& _Left) const
+//	{
+//		return (wakeup_time > _Left.wakeup_time);
+//	}
+//};
+//
+//priority_queue<event_type> timer_queue;
+//mutex timer_l;
+//
+//void add_timer(int obj_id, int ev_type, system_clock::time_point t, int target_id = NULL, char* mess = NULL)
+//{
+//	event_type ev{ obj_id, t, ev_type, target_id, mess };
+//	timer_l.lock();
+//	timer_queue.push(ev);
+//	timer_l.unlock();
+//}
 //
 //void wake_up_npc(int id)
 //{
@@ -187,13 +91,13 @@
 //	return p1 >= MAX_USER;
 //}
 //
-////bool is_near(int p1, int p2)
-////{
-////	int dist = (g_clients[p1].x - g_clients[p2].x) * (g_clients[p1].x - g_clients[p2].x);
-////	dist += (g_clients[p1].y - g_clients[p2].y) * (g_clients[p1].y - g_clients[p2].y);
-////
-////	return dist <= VIEW_LIMIT * VIEW_LIMIT;
-////}
+//bool is_near(int p1, int p2)
+//{
+//	int dist = (g_clients[p1].x - g_clients[p2].x) * (g_clients[p1].x - g_clients[p2].x);
+//	dist += (g_clients[p1].y - g_clients[p2].y) * (g_clients[p1].y - g_clients[p2].y);
+//
+//	return dist <= VIEW_LIMIT * VIEW_LIMIT;
+//}
 //
 //void send_packet(int id, void* p)
 //{
@@ -211,15 +115,15 @@
 //	g_clients[id].c_lock.unlock();
 //}
 //
-////void send_chat_packet(int to_client, int id, char *mess)
-////{
-////	sc_packet_chat p;
-////	p.id = id;
-////	p.size = sizeof(p);
-////	p.type = SC_PACKET_CHAT;
-////	strcpy_s(p.message, mess);
-////	send_packet(to_client, &p);
-////}
+//void send_chat_packet(int to_client, int id, char *mess)
+//{
+//	sc_packet_chat p;
+//	p.id = id;
+//	p.size = sizeof(p);
+//	p.type = SC_PACKET_CHAT;
+//	strcpy_s(p.message, mess);
+//	send_packet(to_client, &p);
+//}
 //
 //void send_login_ok(int id)
 //{
@@ -326,7 +230,7 @@
 //	}
 //
 //	// 시야에 들어온 객체 처리
-//	for (int ob : new_viewlist) {
+//	for (const auto& ob : new_viewlist) {
 //		if (0 == old_viewlist.count(ob)) {
 //			g_clients[id].vl.lock();
 //			g_clients[id].view_list.insert(ob);
@@ -360,7 +264,7 @@
 //			}
 //		}
 //	}
-//	for (int ob : old_viewlist) {
+//	for (const auto& ob : old_viewlist) {
 //		if (0 == new_viewlist.count(ob)) {
 //			g_clients[id].vl.lock();
 //			g_clients[id].view_list.erase(ob);
@@ -507,6 +411,26 @@
 //		}
 //}
 //
+//void disconnect_client(int id)
+//{
+//	for (int i = 0; i < MAX_USER; ++i) {
+//		if (true == g_clients[i].in_use)
+//			if (i != id) {
+//				if (0 != g_clients[i].view_list.count(id)) {
+//					g_clients[i].view_list.erase(id);
+//					send_leave_packet(i, id);
+//				}
+//			}
+//	}
+//	g_clients[id].c_lock.lock();
+//	set_userdata(id, false);
+//	g_clients[id].in_use = false;
+//	g_clients[id].view_list.clear();
+//	closesocket(g_clients[id].m_sock);
+//	g_clients[id].m_sock = 0;
+//	g_clients[id].c_lock.unlock();
+//}
+//
 //void process_packet(int id)
 //{
 //	char p_type = g_clients[id].m_packet_start[1];
@@ -590,8 +514,6 @@
 //		while (true);
 //	}
 //}
-//
-//constexpr int MIN_BUFF_SIZE = 1024;
 //
 //void process_recv(int id, DWORD iosize)
 //{
@@ -680,24 +602,73 @@
 //	add_timer(i, OP_HEAL, system_clock::now() + 5s);
 //}
 //
-//void disconnect_client(int id)
+//void random_move_npc(int id)
 //{
+//	unordered_set <int> old_viewlist;
 //	for (int i = 0; i < MAX_USER; ++i) {
-//		if (true == g_clients[i].in_use)
-//			if (i != id) {
-//				if (0 != g_clients[i].view_list.count(id)) {
-//					g_clients[i].view_list.erase(id);
-//					send_leave_packet(i, id);
-//				}
-//			}
+//		if (false == g_clients[i].in_use) continue;
+//		if (true == is_near(id, i)) old_viewlist.insert(i);
 //	}
-//	g_clients[id].c_lock.lock();
-//	set_userdata(id, false);
-//	g_clients[id].in_use = false;
-//	g_clients[id].view_list.clear();
-//	closesocket(g_clients[id].m_sock);
-//	g_clients[id].m_sock = 0;
-//	g_clients[id].c_lock.unlock();
+//	int x = g_clients[id].x;
+//	int y = g_clients[id].y;
+//	switch (rand() % 4)
+//	{
+//	case 0: if (x > 0) x--; break;
+//	case 1: if (x < (WORLD_WIDTH - 1)) x++; break;
+//	case 2: if (y > 0) y--; break;
+//	case 3: if (y < (WORLD_HEIGHT - 1)) y++; break;
+//	}
+//	g_clients[id].x = x;
+//	g_clients[id].y = y;
+//	unordered_set <int> new_viewlist;
+//	for (int i = 0; i < MAX_USER; ++i) {
+//		if (id == i) continue;
+//		if (false == g_clients[i].in_use) continue;
+//		if (true == is_near(id, i)) new_viewlist.insert(i);
+//	}
+//
+//	for (auto pl : old_viewlist) {
+//		if (0 < new_viewlist.count(pl)) {
+//			if (0 < g_clients[pl].view_list.count(id))
+//				send_move_packet(pl, id);
+//			else {
+//				g_clients[pl].view_list.insert(id);
+//				send_enter_packet(pl, id);
+//			}
+//		}
+//		else
+//		{
+//			if (0 < g_clients[pl].view_list.count(id)) {
+//				g_clients[pl].view_list.erase(id);
+//				send_leave_packet(pl, id);
+//			}
+//		}
+//	}
+//
+//	for (auto pl : new_viewlist) {
+//		if (0 == g_clients[pl].view_list.count(pl)) {
+//			if (0 == g_clients[pl].view_list.count(id)) {
+//				g_clients[pl].view_list.insert(id);
+//				send_enter_packet(pl, id);
+//			}
+//			else
+//				send_move_packet(pl, id);
+//		}
+//	}
+//
+//	if (true == new_viewlist.empty()) {
+//		g_clients[id].is_active = false;
+//	}
+//	else {
+//		add_timer(id, OP_RANDOM_MOVE, system_clock::now() + 1s);
+//	}
+//
+//	for (auto pc : new_viewlist) {
+//		OVER_EX* over_ex = new OVER_EX;
+//		over_ex->object_id = pc;
+//		over_ex->op_mode = OP_PLAYER_MOVE_NOTIFY;
+//		PostQueuedCompletionStatus(h_iocp, 1, id, &over_ex->wsa_over);
+//	}
 //}
 //
 //void worker_thread()
@@ -769,6 +740,71 @@
 //	}
 //}
 //
+//void time_worker()
+//{
+//	while (true) {
+//		while (true) {
+//			if (false == timer_queue.empty()) {
+//				timer_l.lock();
+//				event_type ev = timer_queue.top();
+//				timer_l.unlock();
+//				if (ev.wakeup_time > system_clock::now())
+//					break;
+//				timer_l.lock();
+//				timer_queue.pop();
+//				timer_l.unlock();
+//
+//				switch (ev.event_id)
+//				{
+//				case OP_RANDOM_MOVE:
+//				{
+//					//random_move_npc(ev.obj_id);
+//					OVER_EX* over_ex = new OVER_EX;
+//					over_ex->op_mode = OP_RANDOM_MOVE;
+//					PostQueuedCompletionStatus(h_iocp, 1, ev.obj_id, &over_ex->wsa_over);
+//					//add_timer(ev.obj_id, OP_RANDOM_MOVE, system_clock::now() + 1s);
+//				}
+//				break;
+//				case OP_RUNAWAY:
+//				{
+//					send_chat_packet(ev.target_id, ev.obj_id, ev.message);
+//				}
+//				break;
+//				case OP_REVIVAL:
+//				{
+//					g_clients[ev.obj_id].level = rand() % 10 + 1;
+//					g_clients[ev.obj_id].hp = g_clients[ev.obj_id].level * 100;
+//					for (int i = 0; i < MAX_USER; ++i) {
+//						if (is_near(ev.obj_id, i) && g_clients[i].in_use) {
+//							g_clients[i].vl.lock();
+//							g_clients[i].view_list.insert(ev.obj_id);
+//							send_enter_packet(i, ev.obj_id);
+//							g_clients[i].vl.unlock();
+//						}
+//					}
+//					OVER_EX* over_ex = new OVER_EX;
+//					over_ex->op_mode = OP_RANDOM_MOVE;
+//					PostQueuedCompletionStatus(h_iocp, 1, ev.obj_id, &over_ex->wsa_over);
+//				}
+//				break;
+//				case OP_HEAL:
+//				{
+//					OVER_EX* over_ex = new OVER_EX;
+//					over_ex->op_mode = OP_HEAL;
+//					PostQueuedCompletionStatus(h_iocp, 1, ev.obj_id, &over_ex->wsa_over);
+//				}
+//				break;
+//				default:
+//					printf("Unknown event type: %c\n", ev.event_id);
+//					break;
+//				}
+//			}
+//			else break;
+//		}
+//		this_thread::sleep_for(1ms);
+//	}
+//}
+//
 //int API_get_x(lua_State* L)
 //{
 //	int user_id = lua_tointeger(L, -1);
@@ -830,106 +866,37 @@
 //	return 0;
 //}
 //
-////void initialize_NPC()
-////{
-////	cout << "Initializing NPCs\n";
-////	for (int i = MAX_USER; i < MAX_USER + NUM_NPC; ++i)
-////	{
-////		g_clients[i].x = rand() % WORLD_WIDTH;
-////		g_clients[i].y = rand() % WORLD_HEIGHT;
-////		g_clients[i].level = rand() % 10 + 1;
-////		g_clients[i].hp = g_clients[i].level * 100;
-////		char npc_name[50];
-////		sprintf_s(npc_name, "N%d", i);
-////		strcpy_s(g_clients[i].name, npc_name);
-////		g_clients[i].is_active = false;
-////
-////		lua_State* L = g_clients[i].L = luaL_newstate();
-////		luaL_openlibs(L);
-////
-////		int error = luaL_loadfile(L, "monster.lua");
-////		error = lua_pcall(L, 0, 0, 0);
-////
-////		lua_getglobal(L, "set_uid");
-////		lua_pushnumber(L, i);
-////		lua_pcall(L, 1, 1, 0);
-////		// lua_pop(L, 1);// eliminate set_uid from stack after call
-////
-////		lua_register(L, "API_SendEnterMessage", API_SendEnterMessage);
-////		lua_register(L, "API_SendLeaveMessage", API_SendLeaveMessage);
-////		lua_register(L, "API_get_x", API_get_x);
-////		lua_register(L, "API_get_y", API_get_y);
-////	}
-////	cout << "NPC initialize finished.\n";
-////}
-//
-//void random_move_npc(int id)
+//void initialize_NPC()
 //{
-//	unordered_set <int> old_viewlist;
-//	for (int i = 0; i < MAX_USER; ++i) {
-//		if (false == g_clients[i].in_use) continue;
-//		if (true == is_near(id, i)) old_viewlist.insert(i);
-//	}
-//	int x = g_clients[id].x;
-//	int y = g_clients[id].y;
-//	switch (rand() % 4)
+//	cout << "Initializing NPCs\n";
+//	for (int i = MAX_USER; i < MAX_USER + NUM_NPC; ++i)
 //	{
-//	case 0: if (x > 0) x--; break;
-//	case 1: if (x < (WORLD_WIDTH - 1)) x++; break;
-//	case 2: if (y > 0) y--; break;
-//	case 3: if (y < (WORLD_HEIGHT - 1)) y++; break;
-//	}
-//	g_clients[id].x = x;
-//	g_clients[id].y = y;
-//	unordered_set <int> new_viewlist;
-//	for (int i = 0; i < MAX_USER; ++i) {
-//		if (id == i) continue;
-//		if (false == g_clients[i].in_use) continue;
-//		if (true == is_near(id, i)) new_viewlist.insert(i);
-//	}
+//		g_clients[i].x = rand() % WORLD_WIDTH;
+//		g_clients[i].y = rand() % WORLD_HEIGHT;
+//		g_clients[i].level = rand() % 10 + 1;
+//		g_clients[i].hp = g_clients[i].level * 100;
+//		char npc_name[50];
+//		sprintf_s(npc_name, "N%d", i);
+//		strcpy_s(g_clients[i].name, npc_name);
+//		g_clients[i].is_active = false;
 //
-//	for (auto pl : old_viewlist) {
-//		if (0 < new_viewlist.count(pl)) {
-//			if (0 < g_clients[pl].view_list.count(id))
-//				send_move_packet(pl, id);
-//			else {
-//				g_clients[pl].view_list.insert(id);
-//					send_enter_packet(pl, id);
-//			}
-//		}
-//		else
-//		{
-//			if (0 < g_clients[pl].view_list.count(id)) {
-//				g_clients[pl].view_list.erase(id);
-//				send_leave_packet(pl, id);
-//			}
-//		}
-//	}
+//		lua_State* L = g_clients[i].L = luaL_newstate();
+//		luaL_openlibs(L);
 //
-//	for (auto pl : new_viewlist) {
-//		if (0 == g_clients[pl].view_list.count(pl)) {
-//			if (0 == g_clients[pl].view_list.count(id)) {
-//				g_clients[pl].view_list.insert(id);
-//				send_enter_packet(pl, id);
-//			}
-//			else
-//				send_move_packet(pl, id);
-//		}
-//	}
+//		int error = luaL_loadfile(L, "monster.lua");
+//		error = lua_pcall(L, 0, 0, 0);
 //
-//	if (true == new_viewlist.empty()) {
-//		g_clients[id].is_active = false;
-//	}
-//	else {
-//		add_timer(id, OP_RANDOM_MOVE, system_clock::now() + 1s);
-//	}
+//		lua_getglobal(L, "set_uid");
+//		lua_pushnumber(L, i);
+//		lua_pcall(L, 1, 1, 0);
+//		// lua_pop(L, 1);// eliminate set_uid from stack after call
 //
-//	for (auto pc : new_viewlist) {
-//		OVER_EX* over_ex = new OVER_EX;
-//		over_ex->object_id = pc;
-//		over_ex->op_mode = OP_PLAYER_MOVE_NOTIFY;
-//		PostQueuedCompletionStatus(h_iocp, 1, id, &over_ex->wsa_over);
+//		lua_register(L, "API_SendEnterMessage", API_SendEnterMessage);
+//		lua_register(L, "API_SendLeaveMessage", API_SendLeaveMessage);
+//		lua_register(L, "API_get_x", API_get_x);
+//		lua_register(L, "API_get_y", API_get_y);
 //	}
+//	cout << "NPC initialize finished.\n";
 //}
 //
 //void npc_ai_thread()
@@ -948,53 +915,53 @@
 //
 //int main()
 //{
-//	//std::wcout.imbue(std::locale("korean"));
-//	//for (auto& cl : g_clients)
-//	//	cl.in_use = false;
+//	std::wcout.imbue(std::locale("korean"));
+//	for (auto& cl : g_clients)
+//		cl.in_use = false;
 //
-//	//dbRetcode = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &henv);
-//	//dbRetcode = SQLSetEnvAttr(henv, SQL_ATTR_ODBC_VERSION, (SQLPOINTER*)SQL_OV_ODBC3, 0);
-//	//dbRetcode = SQLAllocHandle(SQL_HANDLE_DBC, henv, &hdbc);
-//	//SQLSetConnectAttr(hdbc, SQL_LOGIN_TIMEOUT, (SQLPOINTER)5, 0);
-//	//dbRetcode = SQLConnect(hdbc, (SQLWCHAR*)L"g_server_1", SQL_NTS, (SQLWCHAR*)NULL, 0, NULL, 0);
+//	dbRetcode = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &henv);
+//	dbRetcode = SQLSetEnvAttr(henv, SQL_ATTR_ODBC_VERSION, (SQLPOINTER*)SQL_OV_ODBC3, 0);
+//	dbRetcode = SQLAllocHandle(SQL_HANDLE_DBC, henv, &hdbc);
+//	SQLSetConnectAttr(hdbc, SQL_LOGIN_TIMEOUT, (SQLPOINTER)5, 0);
+//	dbRetcode = SQLConnect(hdbc, (SQLWCHAR*)L"g_server_1", SQL_NTS, (SQLWCHAR*)NULL, 0, NULL, 0);
 //
-//	//WSADATA WSAData;
-//	//WSAStartup(MAKEWORD(2, 0), &WSAData);
-//	//h_iocp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, 0);
-//	//g_lSocket = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
-//	//CreateIoCompletionPort(reinterpret_cast<HANDLE>(g_lSocket), h_iocp, KEY_SERVER, 0);
+//	WSADATA WSAData;
+//	WSAStartup(MAKEWORD(2, 0), &WSAData);
+//	h_iocp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, 0);
+//	g_lSocket = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
+//	CreateIoCompletionPort(reinterpret_cast<HANDLE>(g_lSocket), h_iocp, KEY_SERVER, 0);
 //
-//	//SOCKADDR_IN serverAddr;
-//	//memset(&serverAddr, 0, sizeof(SOCKADDR_IN));
-//	//serverAddr.sin_family = AF_INET;
-//	//serverAddr.sin_port = htons(SERVER_PORT);
-//	//serverAddr.sin_addr.s_addr = INADDR_ANY;
-//	//::bind(g_lSocket, (sockaddr*)&serverAddr, sizeof(serverAddr));
-//	//listen(g_lSocket, 5);
+//	SOCKADDR_IN serverAddr;
+//	memset(&serverAddr, 0, sizeof(SOCKADDR_IN));
+//	serverAddr.sin_family = AF_INET;
+//	serverAddr.sin_port = htons(SERVER_PORT);
+//	serverAddr.sin_addr.s_addr = INADDR_ANY;
+//	::bind(g_lSocket, (sockaddr*)&serverAddr, sizeof(serverAddr));
+//	listen(g_lSocket, 5);
 //
-//	//SOCKET cSocket = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
-//	//g_accept_over.op_mode = OP_MODE_ACCEPT;
-//	//g_accept_over.wsa_buf.len = static_cast<int>(cSocket);
-//	//ZeroMemory(&g_accept_over.wsa_over, sizeof(&g_accept_over.wsa_over));
-//	//AcceptEx(g_lSocket, cSocket, g_accept_over.iocp_buf, 0, 32, 32, NULL, &g_accept_over.wsa_over);
+//	SOCKET cSocket = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
+//	g_accept_over.op_mode = OP_MODE_ACCEPT;
+//	g_accept_over.wsa_buf.len = static_cast<int>(cSocket);
+//	ZeroMemory(&g_accept_over.wsa_over, sizeof(&g_accept_over.wsa_over));
+//	AcceptEx(g_lSocket, cSocket, g_accept_over.iocp_buf, 0, 32, 32, NULL, &g_accept_over.wsa_over);
 //
-//	//initialize_NPC();
+//	initialize_NPC();
 //
-//	////thread ai_thread{ npc_ai_thread };
-//	//thread timer_thread{ time_worker };
-//	//vector <thread> worker_threads;
-//	//for (int i = 0; i < 4; ++i) 
-//	//	worker_threads.emplace_back(worker_thread);
-//	//for (auto& th : worker_threads)
-//	//	th.join();
-//	////ai_thread.join();
-//	//timer_thread.join();
+//	//thread ai_thread{ npc_ai_thread };
+//	thread timer_thread{ time_worker };
+//	vector <thread> worker_threads;
+//	for (int i = 0; i < 4; ++i) 
+//		worker_threads.emplace_back(worker_thread);
+//	for (auto& th : worker_threads)
+//		th.join();
+//	//ai_thread.join();
+//	timer_thread.join();
 //
-//	//SQLCancel(hstmt);
-//	//SQLFreeHandle(SQL_HANDLE_STMT, hstmt);
-//	//SQLDisconnect(hdbc);
-//	//SQLFreeHandle(SQL_HANDLE_DBC, hdbc);
-//	//SQLFreeHandle(SQL_HANDLE_ENV, henv);
-//	//closesocket(g_lSocket);
-//	//WSACleanup();
+//	SQLCancel(hstmt);
+//	SQLFreeHandle(SQL_HANDLE_STMT, hstmt);
+//	SQLDisconnect(hdbc);
+//	SQLFreeHandle(SQL_HANDLE_DBC, hdbc);
+//	SQLFreeHandle(SQL_HANDLE_ENV, henv);
+//	closesocket(g_lSocket);
+//	WSACleanup();
 //}

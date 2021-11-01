@@ -1,7 +1,7 @@
 #include"CServer.h"
 
 CTimer* CTimer::timer = nullptr;
-std::unordered_map<int, CCharacter*> CServer::characters = std::unordered_map<int, CCharacter*>();
+concurrency::concurrent_unordered_map<int, CCharacter*> CServer::characters = concurrency::concurrent_unordered_map<int, CCharacter*>();
 
 int main()
 {

@@ -15,6 +15,7 @@ extern "C" {
 #include <mutex>
 #include <unordered_set>
 #include <unordered_map>
+#include <concurrent_unordered_map.h>
 #include <chrono>
 #include <queue>
 #include <string>

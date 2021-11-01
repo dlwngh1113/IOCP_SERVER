@@ -15,7 +15,7 @@ class CServer
 
 	CDBConnector* dbConnector;
 public:
-	static std::unordered_map<int, CCharacter*> characters;
+	static concurrency::concurrent_unordered_map<int, CCharacter*> characters;
 	CServer();
 	virtual ~CServer();
 
