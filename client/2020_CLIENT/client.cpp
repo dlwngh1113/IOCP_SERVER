@@ -1,5 +1,6 @@
-#include <SFML/Graphics.hpp>
-#include <SFML/Network.hpp>
+#include<SFML/Graphics.hpp>
+#include<SFML/Network.hpp>
+#include"..\..\server\2020_IOCP_SERVER\protocol.h"
 #include <windows.h>
 #include <iostream>
 #include <unordered_map>
@@ -7,7 +8,6 @@
 using namespace std;
 using namespace chrono;
 
-#include"..\..\GameServerServer\2020_IOCP_SERVER\protocol.h"
 
 sf::TcpSocket g_socket;
 

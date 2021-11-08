@@ -1,4 +1,6 @@
 #pragma once
+#include<WinSock2.h>
+#include<ws2def.h>
 
 constexpr int SERVER_PORT = 3500;
 constexpr int MAX_ID_LEN = 10;

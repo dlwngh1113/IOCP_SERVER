@@ -33,11 +33,11 @@
     </Font>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\GameServerServer\2020_IOCP_SERVER\protocol.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
+    <ClInclude Include="..\..\server\2020_IOCP_SERVER\protocol.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

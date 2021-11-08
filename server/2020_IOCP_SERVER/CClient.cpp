@@ -143,15 +143,13 @@ void CClient::send_enter_packet(CCharacter* other)
 	p.type = SC_PACKET_ENTER;
 	p.x = other->GetInfo()->x;
 	p.y = other->GetInfo()->y;
-	if (p.id > MAX_USER)
+	//if (p.id > MAX_USER)
+	//{
+	//	strcpy_s(p.name, other->GetInfo()->name.c_str());
+	//}
+	//else
 	{
-		strcpy_s(p.name, other->GetInfo()->name.c_str());
-	}
-	else
-	{
-		c_lock.lock();
-		strcpy_s(p.name, other->GetInfo()->name.c_str());
-		c_lock.unlock();
+		strcpy_s(p.name, MAX_ID_LEN, other->GetInfo()->name.c_str());
 	}
 	p.o_type = 0;
 	send_packet(&p);

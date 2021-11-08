@@ -183,27 +183,21 @@ void CServer::random_move_npc(int id)
 		if (0 < new_viewlist.count(pl)) {
 			if (0 < player->GetViewlist().count(id))
 				player->send_move_packet(characters[id]);
-			else {
-				player->GetViewlist().insert(id);
-				player->send_enter_packet(characters[id]);
-			}
+			else
+				player->EnterPlayer(characters[id]);
 		}
 		else
 		{
-			if (0 < player->GetViewlist().count(id)) {
-				player->GetViewlist().erase(id);
-				player->send_leave_packet(id);
-			}
+			if (0 < player->GetViewlist().count(id))
+				player->ErasePlayer(id);
 		}
 	}
 
 	for (auto pl : new_viewlist) {
 		auto player = reinterpret_cast<CClient*>(characters[pl]);
 		if (0 == player->GetViewlist().count(pl)) {
-			if (0 == player->GetViewlist().count(id)) {
-				player->GetViewlist().insert(id);
-				player->send_enter_packet(characters[id]);
-			}
+			if (0 == player->GetViewlist().count(id))
+				player->EnterPlayer(characters[id]);
 			else
 				player->send_move_packet(characters[id]);
 		}
@@ -223,21 +217,22 @@ void CServer::random_move_npc(int id)
 void CServer::add_new_client(SOCKET ns)
 {
 	int i;
-	id_lock.lock();
+	//id_lock.lock();
 	for (i = 0; i < MAX_USER; ++i)
 		if (0 == characters.count(i)) break;
-	id_lock.unlock();
+	//id_lock.unlock();
 	if (MAX_USER == i) {
 		std::cout << "Max user limit exceeded.\n";
 		closesocket(ns);
 	}
 	else {
-		// cout << "New Client [" << i << "] Accepted" << endl;
-		characters[i] = new CClient(i, "", 
+		std::cout << "New Client [" << i << "] Accepted" << std::endl;
+		CClient* client = new CClient(i, "", 
 			rand() % WORLD_WIDTH, 
 			rand() % WORLD_HEIGHT, ns);
 		CreateIoCompletionPort(reinterpret_cast<HANDLE>(ns), h_iocp, i, 0);
-		reinterpret_cast<CClient*>(characters[i])->StartRecv();
+		client->StartRecv();
+		characters[i] = client;
 		CTimer::GetInstance()->add_timer(i, OP_HEAL, std::chrono::system_clock::now() + std::chrono::seconds(5));
 	}
 
