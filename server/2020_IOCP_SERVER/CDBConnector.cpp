@@ -52,7 +52,7 @@ void CDBConnector::set_userdata(CClient* client, bool isInit)
 	}
 
 	//이름, 레벨, x, y, exp
-	wsprintf(tmp, L"EXEC set_userdata %s, %d, %hd, %hd, %d, %hd",
+	wsprintf(tmp, L"EXEC set_userdata %s, %hd, %hd, %hd, %d",
 		nameWchar,
 		client->GetInfo()->name.c_str(),
 		client->GetInfo()->level,

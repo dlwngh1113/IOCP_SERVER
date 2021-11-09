@@ -334,15 +334,15 @@ void client_main()
 	sf::Text text;
 	text.setFont(g_font);
 	char buf[100];
-	sprintf_s(buf, "(%d, %d)", avatar.m_x, avatar.m_y);
+	sprintf_s(buf, "(%hd, %hd) Level-%hd, Hp-%hd, Exp-%d", avatar.m_x, avatar.m_y, avatar.level, avatar.hp, avatar.exp);
 	text.setString(buf);
 	g_window->draw(text);
 
-	sprintf_s(buf, "Level-%hd, Hp-%hd, Exp-%d", avatar.level, avatar.hp, avatar.exp);
-	text.setString(buf);
-	text.setCharacterSize(20);
-	text.setPosition(CLIENT_WIDTH * TILE_WIDTH / 4, 0.f);
-	g_window->draw(text);
+	//sprintf_s(buf, "Level-%hd, Hp-%hd, Exp-%d", avatar.level, avatar.hp, avatar.exp);
+	//text.setString(buf);
+	//text.setCharacterSize(20);
+	//text.setPosition(CLIENT_WIDTH * TILE_WIDTH / 4, 0.f);
+	//g_window->draw(text);
 
 	for (int i = 0; i < g_chatLog.size(); ++i) {
 		g_chatLog[i].setPosition(0,
@@ -409,7 +409,6 @@ int main()
 	cs_packet_login l_packet;
 	l_packet.size = sizeof(l_packet);
 	l_packet.type = CS_LOGIN;
-	int t_id = GetCurrentProcessId();
 	sprintf_s(l_packet.name, s.c_str());
 	strcpy_s(avatar.name, l_packet.name);
 	avatar.set_name(l_packet.name);
@@ -449,12 +448,11 @@ int main()
 					break;
 				}
 			}
-
-			window.clear();
-			client_main();
-			window.display();
 		}
 
+		window.clear();
+		client_main();
+		window.display();
 	}
 	client_finish();
 
