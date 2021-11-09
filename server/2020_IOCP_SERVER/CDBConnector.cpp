@@ -15,7 +15,7 @@ void CDBConnector::Init()
 	dbRetcode = SQLSetEnvAttr(henv, SQL_ATTR_ODBC_VERSION, (SQLPOINTER*)SQL_OV_ODBC3, 0);
 	dbRetcode = SQLAllocHandle(SQL_HANDLE_DBC, henv, &hdbc);
 	SQLSetConnectAttr(hdbc, SQL_LOGIN_TIMEOUT, (SQLPOINTER)5, 0);
-	dbRetcode = SQLConnect(hdbc, (SQLWCHAR*)L"g_server_1", SQL_NTS, (SQLWCHAR*)NULL, 0, NULL, 0);
+	dbRetcode = SQLConnect(hdbc, (SQLWCHAR*)L"g_server", SQL_NTS, (SQLWCHAR*)NULL, 0, NULL, 0);
 }
 
 
@@ -93,6 +93,7 @@ void CDBConnector::get_userdata(CClient* client, cs_packet_login* p)
 			std::cout << "code line 388 error\n";
 		if (dbRetcode == SQL_SUCCESS || dbRetcode == SQL_SUCCESS_WITH_INFO)
 		{
+			printf("%s %d %d %d %d %d", p->name, LEVEL, POSX, POSY, EXP, HP);
 			client->SetInfo(p->name, LEVEL, POSX, POSY, EXP, HP);
 		}
 	}

@@ -329,7 +329,7 @@ void client_main()
 			}
 		}
 	avatar.draw();
-	//	for (auto &pl : players) pl.draw();
+	//for (auto &pl : players) pl.draw();
 	for (auto& npc : npcs) npc.second.draw();
 	sf::Text text;
 	text.setFont(g_font);
@@ -449,11 +449,12 @@ int main()
 					break;
 				}
 			}
+
+			window.clear();
+			client_main();
+			window.display();
 		}
 
-		window.clear();
-		client_main();
-		window.display();
 	}
 	client_finish();
 

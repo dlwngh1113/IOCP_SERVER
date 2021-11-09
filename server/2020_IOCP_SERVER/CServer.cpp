@@ -155,10 +155,11 @@ void CServer::npc_ai_thread()
 void CServer::random_move_npc(int id)
 {
 	std::unordered_set <int> old_viewlist;
-	for (const auto& pl : characters)
+	
+	for (auto i = characters.begin(); i != characters.end(); ++i)
 	{
-		if (is_near(id, pl.first) && pl.first < MAX_USER)
-			old_viewlist.insert(pl.first);
+		if (is_near(id, i->first) && i->first < MAX_USER)
+			old_viewlist.insert(i->first);
 	}
 	int x = characters[id]->GetInfo()->x;
 	int y = characters[id]->GetInfo()->y;
@@ -172,10 +173,10 @@ void CServer::random_move_npc(int id)
 	characters[id]->GetInfo()->x = x;
 	characters[id]->GetInfo()->y = y;
 	std::unordered_set <int> new_viewlist;
-	for (const auto& pl : characters)
+	for (auto i = characters.begin(); i != characters.end(); ++i)
 	{
-		if (is_near(id, pl.first) && pl.first < MAX_USER)
-			new_viewlist.insert(pl.first);
+		if (is_near(id, i->first) && i->first < MAX_USER)
+			new_viewlist.insert(i->first);
 	}
 
 	for (auto pl : old_viewlist) {
@@ -346,11 +347,11 @@ void CServer::process_login(cs_packet_login* p, int id)
 {
 	auto client = reinterpret_cast<CClient*>(characters[id]);
 	client->GetInfo()->name = p->name;
-	for (const auto& c : characters)
+	for (auto i = characters.begin(); i!=characters.end();++i)
 	{
-		if (id != c.first)
+		if (id != i->first)
 		{
-			if (strcmp(c.second->GetInfo()->name.c_str(), client->GetInfo()->name.c_str()) != 0);
+			if (strcmp(i->second->GetInfo()->name.c_str(), client->GetInfo()->name.c_str()) != 0);
 			else
 			{
 				client->send_login_fail();
@@ -364,23 +365,23 @@ void CServer::process_login(cs_packet_login* p, int id)
 		dbConnector->get_userdata(client, p);
 
 	client->send_login_ok();
-	for (const auto& ch : characters)
+	for (auto i = characters.begin(); i != characters.end(); ++i)
 	{
 		//npc case
-		if (ch.first > MAX_USER)
+		if (i->first > MAX_USER)
 		{
-			if (false == is_near(id, ch.first))continue;
-			client->EnterPlayer(reinterpret_cast<CClient*>(ch.second));
-			wake_up_npc(ch.first);
+			if (false == is_near(id, i->first))continue;
+			client->EnterPlayer(reinterpret_cast<CClient*>(i->second));
+			wake_up_npc(i->first);
 		}
 		//player case
-		else if (id != ch.first)
+		else if (id != i->first)
 		{
-			if (false == is_near(ch.first, id))continue;
-			if (0 == ch.second->GetViewlist().count(id))
-				reinterpret_cast<CClient*>(ch.second)->EnterPlayer(client);
-			if (0 == client->GetViewlist().count(ch.first))
-				client->EnterPlayer(reinterpret_cast<CClient*>(ch.second));
+			if (false == is_near(i->first, id))continue;
+			if (0 == i->second->GetViewlist().count(id))
+				reinterpret_cast<CClient*>(i->second)->EnterPlayer(client);
+			if (0 == client->GetViewlist().count(i->first))
+				client->EnterPlayer(reinterpret_cast<CClient*>(i->second));
 		}
 	}
 }
@@ -411,19 +412,19 @@ void CServer::process_move(int id, char dir)
 	client->send_move_packet(client);
 
 	std::unordered_set <int> new_viewlist;
-	for (const auto& ch : characters)
+	for (auto i = characters.begin(); i != characters.end(); ++i)
 	{
-		if (id == ch.first)continue;
-		if (ch.first > MAX_USER)
+		if (id == i->first)continue;
+		if (i->first > MAX_USER)
 		{
-			if (true == is_near(id, ch.first))
+			if (true == is_near(id, i->first))
 			{
-				new_viewlist.insert(ch.first);
-				wake_up_npc(ch.first);
+				new_viewlist.insert(i->first);
+				wake_up_npc(i->first);
 			}
 		}
-		else if (true == is_near(id, ch.first))
-			new_viewlist.insert(ch.first);
+		else if (true == is_near(id, i->first))
+			new_viewlist.insert(i->first);
 	}
 
 	// 시야에 들어온 객체 처리
