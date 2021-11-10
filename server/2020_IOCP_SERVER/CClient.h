@@ -11,8 +11,8 @@ class CClient : public CCharacter
 	void send_packet(void* p);
 public:
 #pragma region getter
-	unsigned char* getPacketStart();
-	unsigned char* getRecvStart();
+	unsigned char*& getPacketStart();
+	unsigned char*& getRecvStart();
 	char getPacketType() const;
 #pragma endregion
 

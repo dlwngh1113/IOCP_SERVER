@@ -43,7 +43,7 @@ void CDBConnector::set_userdata(CClient* client, bool isInit)
 	MultiByteToWideChar(CP_ACP, 0, client->GetInfo()->name.c_str(), -1, (LPWSTR)nameWchar, nChars);
 
 	if (isInit) {
-		client->SetInfo(client->GetInfo()->name.c_str(), 1, 0, 0, 0, 100);
+		client->SetInfo("", 1, 0, 0, 0, 100);
 		wsprintf(tmp, L"EXEC insert_player %s", nameWchar);
 
 		dbRetcode = SQLExecDirect(hstmt, (SQLWCHAR*)tmp, SQL_NTS);
@@ -52,13 +52,13 @@ void CDBConnector::set_userdata(CClient* client, bool isInit)
 	}
 
 	//이름, 레벨, x, y, exp
-	wsprintf(tmp, L"EXEC set_userdata %s, %hd, %hd, %hd, %d",
+	wsprintf(tmp, L"EXEC set_userdata %s, %d, %hd, %hd, %d, %hd",
 		nameWchar,
-		client->GetInfo()->name.c_str(),
 		client->GetInfo()->level,
 		client->GetInfo()->x,
 		client->GetInfo()->y,
-		client->GetInfo()->exp);
+		client->GetInfo()->exp,
+		client->GetInfo()->hp);
 
 	dbRetcode = SQLExecDirect(hstmt, (SQLWCHAR*)tmp, SQL_NTS);
 

@@ -16,6 +16,8 @@ public:
 	int atk_time{ 0 };
 	int move_time{ 0 };
 
+	std::mutex c_lock;
+
 	CInfo() = default;
 	CInfo(int id, std::string name, short x, short y);
 	virtual ~CInfo();

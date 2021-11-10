@@ -26,6 +26,6 @@ extern "C" {
 #pragma comment(lib, "Ws2_32.lib")
 #pragma comment(lib, "MSWSock.lib")
 #pragma comment(lib, "lua54.lib")
-#pragma commint(lib, "odbc32")
+#pragma comment(lib, "odbc32")
 
 #include"protocol.h"

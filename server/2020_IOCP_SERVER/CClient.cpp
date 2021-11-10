@@ -6,9 +6,9 @@ CClient::CClient(): CCharacter()
 
 CClient::CClient(int id, std::string name, short x, short y, SOCKET s):CCharacter(id, name, x, y)
 {
-	c_lock.lock();
+	GetInfo()->c_lock.lock();
 	m_sock = s;
-	c_lock.unlock();
+	GetInfo()->c_lock.unlock();
 
 	this->m_packet_start = this->m_recv_over.iocp_buf;
 	this->m_recv_over.op_mode = OP_MODE_RECV;
@@ -30,7 +30,7 @@ CClient::~CClient()
 
 void CClient::SetInfo(const char* name, short level, short x, short y, int exp, short hp)
 {
-	this->c_lock.lock();
+	this->GetInfo()->c_lock.lock();
 	GetInfo()->name = name;
 
 	GetInfo()->level = level;
@@ -38,7 +38,7 @@ void CClient::SetInfo(const char* name, short level, short x, short y, int exp, 
 	GetInfo()->y = y;
 	GetInfo()->exp = exp;
 	GetInfo()->hp = hp;
-	this->c_lock.unlock();
+	this->GetInfo()->c_lock.unlock();
 }
 
 void CClient::Teleport(short x, short y)
@@ -48,16 +48,16 @@ void CClient::Teleport(short x, short y)
 
 void CClient::Release()
 {
-	this->c_lock.lock();
+	this->GetInfo()->c_lock.lock();
 	viewList.clear();
 	closesocket(this->m_sock);
 	this->m_sock = 0;
-	this->c_lock.unlock();
+	this->GetInfo()->c_lock.unlock();
 }
 
 void CClient::AutoHeal()
 {
-	this->c_lock.lock();
+	this->GetInfo()->c_lock.lock();
 	short maxHp = GetInfo()->level * 70;
 	if (GetInfo()->hp + maxHp * 0.1 >= maxHp)
 		GetInfo()->hp = maxHp;
@@ -66,12 +66,12 @@ void CClient::AutoHeal()
 	char mess[MAX_STR_LEN];
 	sprintf_s(mess, "auto healing...%s", GetInfo()->name.c_str());
 	send_heal_packet(mess);
-	this->c_lock.unlock();
+	this->GetInfo()->c_lock.unlock();
 }
 
 void CClient::LevelUp(int targetID, int exp)
 {
-	c_lock.lock();
+	GetInfo()->c_lock.lock();
 	send_leave_packet(targetID);
 	GetInfo()->exp += exp;
 	if (GetInfo()->exp > GetInfo()->level * 100) {
@@ -80,14 +80,14 @@ void CClient::LevelUp(int targetID, int exp)
 		GetInfo()->hp = GetInfo()->level * 70;
 	}
 	send_stat_change();
-	c_lock.unlock();
+	GetInfo()->c_lock.unlock();
 }
 
 void CClient::HitByPlayer(char* mess)
 {
-	c_lock.lock();
+	GetInfo()->c_lock.lock();
 	GetInfo()->hp -= 100;
-	c_lock.unlock();
+	GetInfo()->c_lock.unlock();
 }
 
 void CClient::send_login_fail()
@@ -143,14 +143,9 @@ void CClient::send_enter_packet(CCharacter* other)
 	p.type = SC_PACKET_ENTER;
 	p.x = other->GetInfo()->x;
 	p.y = other->GetInfo()->y;
-	//if (p.id > MAX_USER)
-	//{
-	//	strcpy_s(p.name, other->GetInfo()->name.c_str());
-	//}
-	//else
-	{
-		strcpy_s(p.name, MAX_ID_LEN, other->GetInfo()->name.c_str());
-	}
+	other->GetInfo()->c_lock.lock();
+	strcpy_s(p.name, other->GetInfo()->name.c_str());
+	other->GetInfo()->c_lock.unlock();
 	p.o_type = 0;
 	send_packet(&p);
 }
@@ -192,10 +187,10 @@ void CClient::StartRecv()
 {
 	DWORD flags = 0;
 	int ret;
-	this->c_lock.lock();
+	this->GetInfo()->c_lock.lock();
 	ret = WSARecv(this->m_sock, &this->m_recv_over.wsa_buf, 1, NULL,
 		&flags, &this->m_recv_over.wsa_over, NULL);
-	this->c_lock.unlock();
+	this->GetInfo()->c_lock.unlock();
 	if (SOCKET_ERROR == ret) {
 		int err_no = WSAGetLastError();
 		if (ERROR_IO_PENDING != err_no)
@@ -236,10 +231,10 @@ void CClient::IncreaseBuffer(DWORD iosize, long long left_data)
 	m_recv_over.wsa_buf.len = MAX_BUFFER -
 		static_cast<int>(next_recv_ptr - m_recv_over.iocp_buf);
 
-	c_lock.lock();
+	GetInfo()->c_lock.lock();
 	WSARecv(m_sock, &m_recv_over.wsa_buf,
 		1, NULL, &recv_flag, &m_recv_over.wsa_over, NULL);
-	c_lock.unlock();
+	GetInfo()->c_lock.unlock();
 }
 
 void CClient::send_packet(void* p)
@@ -251,18 +246,18 @@ void CClient::send_packet(void* p)
 	send_over->wsa_buf.buf = reinterpret_cast<CHAR*>(send_over->iocp_buf);
 	send_over->wsa_buf.len = packet[0];
 	ZeroMemory(&send_over->wsa_over, sizeof(send_over->wsa_over));
-	this->c_lock.lock();
+	this->GetInfo()->c_lock.lock();
 	WSASend(this->m_sock, &send_over->wsa_buf, 1,
 		NULL, 0, &send_over->wsa_over, NULL);
-	this->c_lock.unlock();
+	this->GetInfo()->c_lock.unlock();
 }
 
-unsigned char* CClient::getPacketStart()
+unsigned char*& CClient::getPacketStart()
 {
 	return m_packet_start;
 }
 
-unsigned char* CClient::getRecvStart()
+unsigned char*& CClient::getRecvStart()
 {
 	return m_recv_start;
 }

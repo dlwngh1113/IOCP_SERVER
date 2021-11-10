@@ -8,8 +8,6 @@ class CCharacter
 protected:
 	std::unordered_set<int> viewList;
 	std::mutex viewLock;
-
-	std::mutex c_lock;
 public:
 	CCharacter() = default;
 	CCharacter(int id, std::string name, short x, short y);

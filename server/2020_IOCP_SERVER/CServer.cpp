@@ -18,7 +18,7 @@ void CServer::run()
 	dbConnector->Init();
 
 	WSADATA WSAData;
-	::WSAStartup(MAKEWORD(2, 0), &WSAData);
+	WSAStartup(MAKEWORD(2, 0), &WSAData);
 	h_iocp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, 0);
 	g_lSocket = ::WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
 	CreateIoCompletionPort(reinterpret_cast<HANDLE>(g_lSocket), h_iocp, KEY_SERVER, 0);
@@ -35,7 +35,7 @@ void CServer::run()
 	g_accept_over.op_mode = OP_MODE_ACCEPT;
 	g_accept_over.wsa_buf.len = static_cast<int>(cSocket);
 	ZeroMemory(&g_accept_over.wsa_over, sizeof(&g_accept_over.wsa_over));
-	::AcceptEx(g_lSocket, cSocket, g_accept_over.iocp_buf, 0, 32, 32, NULL, &g_accept_over.wsa_over);
+	AcceptEx(g_lSocket, cSocket, g_accept_over.iocp_buf, 0, 32, 32, NULL, &g_accept_over.wsa_over);
 
 	initialize_NPC();
 
@@ -43,10 +43,10 @@ void CServer::run()
 	std::vector <std::thread> worker_threads;
 	for (int i = 0; i < 4; ++i)
 		worker_threads.emplace_back([&]() {worker_thread(); });
+	CTimer::GetInstance()->join();
 	for (auto& th : worker_threads)
 		th.join();
 	ai_thread.join();
-	CTimer::GetInstance()->join();
 
 	dbConnector->Release();
 	closesocket(g_lSocket);
@@ -72,6 +72,21 @@ void CServer::initialize_NPC()
 	std::cout << "NPC initialize finished.\n";
 }
 
+void error_display(const char* msg, int err_no)
+{
+	WCHAR* lpMsgBuf;
+	FormatMessage(
+		FORMAT_MESSAGE_ALLOCATE_BUFFER |
+		FORMAT_MESSAGE_FROM_SYSTEM,
+		NULL, err_no,
+		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		(LPTSTR)&lpMsgBuf, 0, NULL);
+	std::cout << msg;
+	std::wcout << L"에러 " << lpMsgBuf << std::endl;
+	while (true);
+	LocalFree(lpMsgBuf);
+}
+
 void CServer::worker_thread()
 {
 	// 반복
@@ -83,13 +98,13 @@ void CServer::worker_thread()
 		int key;
 		ULONG_PTR iocp_key;
 		WSAOVERLAPPED* lpover;
-		//int ret = 
+		int ret = 
 		GetQueuedCompletionStatus(h_iocp, &io_size, &iocp_key, &lpover, INFINITE);
 		key = static_cast<int>(iocp_key);
 		// cout << "Completion Detected" << endl;
-		//if (FALSE == ret) {
-		//	error_display("GQCS Error : ", WSAGetLastError());
-		//}
+		if (FALSE == ret) {
+			error_display("GQCS Error : ", WSAGetLastError());
+		}
 
 		OVER_EX* over_ex = reinterpret_cast<OVER_EX*>(lpover);
 		switch (over_ex->op_mode) {
@@ -218,10 +233,10 @@ void CServer::random_move_npc(int id)
 void CServer::add_new_client(SOCKET ns)
 {
 	int i;
-	//id_lock.lock();
+	id_lock.lock();
 	for (i = 0; i < MAX_USER; ++i)
 		if (0 == characters.count(i)) break;
-	//id_lock.unlock();
+	id_lock.unlock();
 	if (MAX_USER == i) {
 		std::cout << "Max user limit exceeded.\n";
 		closesocket(ns);
@@ -241,7 +256,7 @@ void CServer::add_new_client(SOCKET ns)
 	g_accept_over.op_mode = OP_MODE_ACCEPT;
 	g_accept_over.wsa_buf.len = static_cast<ULONG> (cSocket);
 	ZeroMemory(&g_accept_over.wsa_over, sizeof(&g_accept_over.wsa_over));
-	::AcceptEx(g_lSocket, cSocket, g_accept_over.iocp_buf, 0, 32, 32, NULL, &g_accept_over.wsa_over);
+	AcceptEx(g_lSocket, cSocket, g_accept_over.iocp_buf, 0, 32, 32, NULL, &g_accept_over.wsa_over);
 }
 
 void CServer::disconnect_client(int id)
