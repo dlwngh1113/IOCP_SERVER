@@ -115,7 +115,7 @@ void CServer::worker_thread()
 			if (0 == io_size)
 				disconnect_client(key);
 			else {
-				// cout << "Packet from Client [" << key << "]" << endl;
+				//std::cout << "Packet from Client [" << key << "] - ioSize: " << io_size << "\"\n";
 				process_recv(key, io_size);
 			}
 			break;
@@ -242,7 +242,7 @@ void CServer::add_new_client(SOCKET ns)
 		closesocket(ns);
 	}
 	else {
-		std::cout << "New Client [" << i << "] Accepted" << std::endl;
+		//std::cout << "New Client [" << i << "] Accepted" << std::endl;
 		CClient* client = new CClient(i, "", 
 			rand() % WORLD_WIDTH, 
 			rand() % WORLD_HEIGHT, ns);
@@ -297,18 +297,17 @@ bool CServer::isIn_atkRange(int p1, int p2)
 void CServer::process_recv(int id, DWORD iosize)
 {
 	auto client = reinterpret_cast<CClient*>(characters[id]);
-	unsigned char* packet_start = client->getPacketStart();
+	unsigned char p_size = client->getPacketStart()[0];
 	unsigned char* next_recv_ptr = client->getRecvStart() + iosize;
-	unsigned char p_size = packet_start[0];
-	while (p_size <= next_recv_ptr - packet_start) {
+	while (p_size <= next_recv_ptr - client->getPacketStart()) {
 		process_packet(id);
-		packet_start += p_size;
-		if (packet_start < next_recv_ptr)
-			p_size = packet_start[0];
+		client->getPacketStart() += p_size;
+		if (client->getPacketStart() < next_recv_ptr)
+			p_size = client->getPacketStart()[0];
 		else break;
 	}
 
-	long long left_data = next_recv_ptr - packet_start;
+	long long left_data = next_recv_ptr - client->getPacketStart();
 
 	client->IncreaseBuffer(iosize, left_data);
 }

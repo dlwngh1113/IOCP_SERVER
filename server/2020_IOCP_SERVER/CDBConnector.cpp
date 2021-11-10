@@ -93,7 +93,7 @@ void CDBConnector::get_userdata(CClient* client, cs_packet_login* p)
 			std::cout << "code line 388 error\n";
 		if (dbRetcode == SQL_SUCCESS || dbRetcode == SQL_SUCCESS_WITH_INFO)
 		{
-			printf("%s %d %d %d %d %d", p->name, LEVEL, POSX, POSY, EXP, HP);
+			//printf("%s %d %d %d %d %d", p->name, LEVEL, POSX, POSY, EXP, HP);
 			client->SetInfo(p->name, LEVEL, POSX, POSY, EXP, HP);
 		}
 	}
