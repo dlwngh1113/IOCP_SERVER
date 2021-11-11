@@ -266,6 +266,7 @@ void CServer::disconnect_client(int id)
 		client->ErasePlayer(id);
 	dbConnector->set_userdata(client, false);
 	client->Release();
+	characters.unsafe_erase(id);
 }
 
 void CServer::wake_up_npc(int id)
