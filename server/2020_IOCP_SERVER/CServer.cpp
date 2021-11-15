@@ -143,9 +143,11 @@ void CServer::worker_thread()
 			auto player = reinterpret_cast<CClient*>(characters[key]);
 			player->GetInfo()->level = rand() % 10 + 1;
 			player->GetInfo()->hp = player->GetInfo()->level * 100;
-			for (int i = 0; i < MAX_USER; ++i)
-				if (is_near(key, i))
-					player->EnterPlayer(characters[i]);
+			for (auto i = characters.begin(); i != characters.end(); ++i)
+			{
+				if (is_near(key, i->first) && i->first < MAX_USER)
+					player->EnterPlayer(characters[i->first]);
+			}
 			delete over_ex;
 		}
 			break;
@@ -263,9 +265,10 @@ void CServer::disconnect_client(int id)
 {
 	auto client = reinterpret_cast<CClient*>(characters[id]);
 	for (const auto& i : client->GetViewlist())
-		client->ErasePlayer(id);
+		reinterpret_cast<CClient*>(characters[i])->ErasePlayer(id);
 	dbConnector->set_userdata(client, false);
 	client->Release();
+	delete client;
 	characters.unsafe_erase(id);
 }
 
@@ -276,8 +279,10 @@ void CServer::wake_up_npc(int id)
 
 bool CServer::is_near(int p1, int p2)
 {
-	int dist = (characters[p1]->GetInfo()->x - characters[p2]->GetInfo()->x) * (characters[p1]->GetInfo()->x - characters[p2]->GetInfo()->x);
-	dist += (characters[p1]->GetInfo()->y - characters[p2]->GetInfo()->y) * (characters[p1]->GetInfo()->y - characters[p2]->GetInfo()->y);
+	auto player1 = characters[p1];
+	auto player2 = characters[p2];
+	int dist = (player1->GetInfo()->x - player2->GetInfo()->x) * (player1->GetInfo()->x - player2->GetInfo()->x)
+			 + (player1->GetInfo()->y - player2->GetInfo()->y) * (player1->GetInfo()->y - player2->GetInfo()->y);
 
 	return dist <= VIEW_LIMIT * VIEW_LIMIT;
 }
@@ -382,21 +387,22 @@ void CServer::process_login(cs_packet_login* p, int id)
 	client->send_login_ok();
 	for (auto i = characters.begin(); i != characters.end(); ++i)
 	{
-		//npc case
-		if (i->first > MAX_USER)
+		if (is_near(id, i->first))
 		{
-			if (false == is_near(id, i->first))continue;
-			client->EnterPlayer(reinterpret_cast<CClient*>(i->second));
-			wake_up_npc(i->first);
-		}
-		//player case
-		else if (id != i->first)
-		{
-			if (false == is_near(i->first, id))continue;
-			if (0 == i->second->GetViewlist().count(id))
-				reinterpret_cast<CClient*>(i->second)->EnterPlayer(client);
-			if (0 == client->GetViewlist().count(i->first))
+			//npc case
+			if (i->first > MAX_USER)
+			{
 				client->EnterPlayer(reinterpret_cast<CClient*>(i->second));
+				wake_up_npc(i->first);
+			}
+			//player case
+			else if (id != i->first)
+			{
+				if (0 == i->second->GetViewlist().count(id))
+					reinterpret_cast<CClient*>(i->second)->EnterPlayer(client);
+				if (0 == client->GetViewlist().count(i->first))
+					client->EnterPlayer(reinterpret_cast<CClient*>(i->second));
+			}
 		}
 	}
 }
@@ -430,16 +436,12 @@ void CServer::process_move(int id, char dir)
 	for (auto i = characters.begin(); i != characters.end(); ++i)
 	{
 		if (id == i->first)continue;
-		if (i->first > MAX_USER)
+		if (is_near(id, i->first))
 		{
-			if (true == is_near(id, i->first))
-			{
-				new_viewlist.insert(i->first);
-				wake_up_npc(i->first);
-			}
-		}
-		else if (true == is_near(id, i->first))
 			new_viewlist.insert(i->first);
+			if (i->first > MAX_USER)
+				wake_up_npc(i->first);
+		}
 	}
 
 	// 시야에 들어온 객체 처리

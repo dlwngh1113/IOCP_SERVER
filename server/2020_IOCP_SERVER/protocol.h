@@ -10,7 +10,7 @@ constexpr int WORLD_HEIGHT = 800;
 constexpr int MAX_STR_LEN = 100;
 constexpr int VIEW_LIMIT = 7;				// 시야 반지름, 상대방과 사이에 6개의 타일이 있어도 보여야 함.
 
-constexpr int NUM_NPC = 1000;
+constexpr int NUM_NPC = 10'000;
 
 constexpr int MAX_BUFFER = 4096;
 constexpr int MIN_BUFF_SIZE = 1024;
