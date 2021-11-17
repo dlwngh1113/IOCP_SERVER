@@ -8,16 +8,12 @@
 using namespace std;
 using namespace chrono;
 
-
 sf::TcpSocket g_socket;
 
 constexpr auto TILE_WIDTH = 32;
 constexpr auto CLIENT_WIDTH = 20;
 constexpr auto CLIENT_HEIGHT = 20;
 constexpr auto BUF_SIZE = 200;
-
-// 추후 확장용.
-int NPC_ID_START = 10000;
 
 int g_left_x;
 int g_top_y;
@@ -37,10 +33,10 @@ private:
 	sf::Text m_name;
 
 public:
-	int m_x, m_y;
-	short hp;
-	short level;
-	int   exp;
+	int m_x{ 0 }, m_y{ 0 };
+	short hp{ 0 };
+	short level{ 0 };
+	int   exp{ 0 };
 	char name[MAX_ID_LEN];
 	OBJECT(sf::Texture& t, int x, int y, int x2, int y2) {
 		m_showing = false;
@@ -143,7 +139,6 @@ void client_finish()
 
 void ProcessPacket(char* ptr)
 {
-	static bool first_time = true;
 	switch (ptr[1])
 	{
 	case SC_PACKET_LOGIN_OK:
@@ -156,6 +151,13 @@ void ProcessPacket(char* ptr)
 		avatar.move(my_packet->x, my_packet->y);
 		g_left_x = my_packet->x - CLIENT_WIDTH / 2;
 		g_top_y = my_packet->y - CLIENT_HEIGHT / 2;
+		printf("%d %d %d %d %d %d\n",
+			my_packet->id,
+			my_packet->hp,
+			my_packet->exp,
+			my_packet->level,
+			avatar.m_x,
+			avatar.m_y);
 		avatar.show();
 	}
 	break;
@@ -182,6 +184,11 @@ void ProcessPacket(char* ptr)
 		sc_packet_enter* my_packet = reinterpret_cast<sc_packet_enter*>(ptr);
 		int id = my_packet->id;
 
+		printf("%d %d %d\n",
+			my_packet->id,
+			avatar.m_x,
+			avatar.m_y);
+
 		if (id == g_myid) {
 			avatar.move(my_packet->x, my_packet->y);
 			g_left_x = my_packet->x - CLIENT_WIDTH / 2;
@@ -189,7 +196,7 @@ void ProcessPacket(char* ptr)
 			avatar.show();
 		}
 		else {
-			if (id < NPC_ID_START)
+			if (id < MAX_USER)
 				npcs[id] = OBJECT{ *pieces, 0, 0, TILE_WIDTH, TILE_WIDTH };
 			else
 				npcs[id] = OBJECT{ *pieces, 32, 0, TILE_WIDTH, TILE_WIDTH };
@@ -305,7 +312,12 @@ void client_main()
 	}
 
 	if (recv_result != sf::Socket::NotReady)
-		if (received > 0) process_data(net_buf, received);
+	{
+		if (received > 0)
+			process_data(net_buf, received);
+		else
+			return;
+	}
 
 	for (int i = avatar.m_x - CLIENT_WIDTH / 2; i < avatar.m_x + CLIENT_WIDTH / 2; ++i)
 		for (int j = avatar.m_y - CLIENT_HEIGHT / 2; j < avatar.m_y + CLIENT_HEIGHT / 2; ++j)
@@ -328,27 +340,27 @@ void client_main()
 				ghost.a_draw();
 			}
 		}
-	avatar.draw();
-	//for (auto &pl : players) pl.draw();
-	for (auto& npc : npcs) npc.second.draw();
-	sf::Text text;
-	text.setFont(g_font);
-	char buf[100];
-	sprintf_s(buf, "(%hd, %hd)", avatar.m_x, avatar.m_y);
-	text.setString(buf);
-	g_window->draw(text);
+	//avatar.draw();
+	////for (auto& npc : npcs) 
+	////	npc.second.draw();
+	//sf::Text text;
+	//text.setFont(g_font);
+	//char buf[100];
+	//sprintf_s(buf, "(%d, %d)", avatar.m_x, avatar.m_y);
+	//text.setString(buf);
+	//g_window->draw(text);
 
-	sprintf_s(buf, "Level-%hd, Hp-%hd, Exp-%d", avatar.level, avatar.hp, avatar.exp);
-	text.setString(buf);
-	text.setCharacterSize(20);
-	text.setPosition(CLIENT_WIDTH * TILE_WIDTH / 4, 0.f);
-	g_window->draw(text);
+	//sprintf_s(buf, "Level-%hd, Hp-%hd, Exp-%d", avatar.level, avatar.hp, avatar.exp);
+	//text.setString(buf);
+	//text.setCharacterSize(20);
+	//text.setPosition(CLIENT_WIDTH * TILE_WIDTH / 4, 0.f);
+	//g_window->draw(text);
 
-	for (int i = 0; i < g_chatLog.size(); ++i) {
-		g_chatLog[i].setPosition(0,
-			CLIENT_HEIGHT * TILE_WIDTH * 0.75 + 20 * i);
-		g_window->draw(g_chatLog[i]);
-	}
+	//for (int i = 0; i < g_chatLog.size(); ++i) {
+	//	g_chatLog[i].setPosition(0,
+	//		CLIENT_HEIGHT * TILE_WIDTH * 0.75 + 20 * i);
+	//	g_window->draw(g_chatLog[i]);
+	//}
 }
 
 void send_packet(void* packet)
@@ -454,6 +466,7 @@ int main()
 		client_main();
 		window.display();
 	}
+	send_logout_packet();
 	client_finish();
 
 	return 0;

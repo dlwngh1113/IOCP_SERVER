@@ -1,4 +1,5 @@
 #include "CTimer.h"
+#include"CServer.h"
 
 CTimer::CTimer(HANDLE h_iocp) : h_iocp{ h_iocp }
 {
@@ -81,7 +82,8 @@ void CTimer::send_chat_packet(int to_client, int id, char* mess)
 	p.size = sizeof(p);
 	p.type = SC_PACKET_CHAT;
 	strcpy_s(p.message, mess);
-	//send_packet(to_client, &p);
+	auto client = reinterpret_cast<CClient*>(CServer::characters[id]);
+	client->send_chat_packet(to_client, mess);
 }
 
 void CTimer::join()

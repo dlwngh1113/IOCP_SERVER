@@ -329,6 +329,15 @@
 //			g_clients[id].exp = EXP;
 //			g_clients[id].hp = HP;
 //			g_clients[id].c_lock.unlock();
+//
+//			printf("%s %d %d %d %d %d %d\n",
+//				g_clients[id].name,
+//				id,
+//				g_clients[id].hp,
+//				g_clients[id].exp,
+//				g_clients[id].level,
+//				g_clients[id].x,
+//				g_clients[id].y);
 //		}
 //	}
 //
@@ -908,7 +917,7 @@
 //				random_move_npc(i);
 //		auto end_time = system_clock::now();
 //		auto exec_time = end_time - start_time;
-//		cout << "AI exec time = " << duration_cast<seconds>(exec_time).count() << "s\n";
+//		//cout << "AI exec time = " << duration_cast<seconds>(exec_time).count() << "s\n";
 //		this_thread::sleep_for(1s - (end_time - start_time));
 //	}
 //}
@@ -923,7 +932,7 @@
 //	dbRetcode = SQLSetEnvAttr(henv, SQL_ATTR_ODBC_VERSION, (SQLPOINTER*)SQL_OV_ODBC3, 0);
 //	dbRetcode = SQLAllocHandle(SQL_HANDLE_DBC, henv, &hdbc);
 //	SQLSetConnectAttr(hdbc, SQL_LOGIN_TIMEOUT, (SQLPOINTER)5, 0);
-//	dbRetcode = SQLConnect(hdbc, (SQLWCHAR*)L"g_server_1", SQL_NTS, (SQLWCHAR*)NULL, 0, NULL, 0);
+//	dbRetcode = SQLConnect(hdbc, (SQLWCHAR*)L"g_server", SQL_NTS, (SQLWCHAR*)NULL, 0, NULL, 0);
 //
 //	WSADATA WSAData;
 //	WSAStartup(MAKEWORD(2, 0), &WSAData);
@@ -947,14 +956,14 @@
 //
 //	initialize_NPC();
 //
-//	//thread ai_thread{ npc_ai_thread };
+//	thread ai_thread{ npc_ai_thread };
 //	thread timer_thread{ time_worker };
 //	vector <thread> worker_threads;
 //	for (int i = 0; i < 4; ++i) 
 //		worker_threads.emplace_back(worker_thread);
 //	for (auto& th : worker_threads)
 //		th.join();
-//	//ai_thread.join();
+//	ai_thread.join();
 //	timer_thread.join();
 //
 //	SQLCancel(hstmt);

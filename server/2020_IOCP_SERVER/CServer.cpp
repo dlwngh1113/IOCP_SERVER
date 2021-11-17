@@ -269,7 +269,8 @@ void CServer::disconnect_client(int id)
 	dbConnector->set_userdata(client, false);
 	client->Release();
 	delete client;
-	characters.unsafe_erase(id);
+	if (characters.unsafe_erase(id))
+		std::cout << "erased id - " << id << std::endl;
 }
 
 void CServer::wake_up_npc(int id)
