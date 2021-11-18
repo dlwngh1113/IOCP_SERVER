@@ -235,10 +235,10 @@ void CServer::random_move_npc(int id)
 void CServer::add_new_client(SOCKET ns)
 {
 	int i;
-	id_lock.lock();
+	//id_lock.lock();
 	for (i = 0; i < MAX_USER; ++i)
 		if (0 == characters.count(i)) break;
-	id_lock.unlock();
+	//id_lock.unlock();
 	if (MAX_USER == i) {
 		std::cout << "Max user limit exceeded.\n";
 		closesocket(ns);
@@ -268,9 +268,15 @@ void CServer::disconnect_client(int id)
 		reinterpret_cast<CClient*>(characters[i])->ErasePlayer(id);
 	dbConnector->set_userdata(client, false);
 	client->Release();
-	delete client;
-	if (characters.unsafe_erase(id))
-		std::cout << "erased id - " << id << std::endl;
+
+	if (!std::atomic_compare_exchange_strong(
+		reinterpret_cast<std::atomic_int*>(characters[id]),
+		reinterpret_cast<int*>(client),
+		reinterpret_cast<int>(nullptr)) && characters.unsafe_erase(id))
+	{
+		characters.unsafe_erase(id);
+		delete client;
+	}
 }
 
 void CServer::wake_up_npc(int id)

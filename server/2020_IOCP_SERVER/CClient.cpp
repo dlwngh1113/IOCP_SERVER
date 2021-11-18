@@ -111,14 +111,14 @@ void CClient::send_login_ok()
 	p.type = SC_PACKET_LOGIN_OK;
 	p.x = GetInfo()->x;
 	p.y = GetInfo()->y;
-	printf("%s %d %d %d %d %d %d",
-		GetInfo()->name.c_str(),
-		GetInfo()->id,
-		GetInfo()->hp,
-		GetInfo()->exp,
-		GetInfo()->level,
-		GetInfo()->x,
-		GetInfo()->y);
+	//printf("%s %d %d %d %d %d %d",
+	//	GetInfo()->name.c_str(),
+	//	GetInfo()->id,
+	//	GetInfo()->hp,
+	//	GetInfo()->exp,
+	//	GetInfo()->level,
+	//	GetInfo()->x,
+	//	GetInfo()->y);
 	send_packet(&p);
 }
 
