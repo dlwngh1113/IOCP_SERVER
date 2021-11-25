@@ -177,11 +177,13 @@ void CServer::random_move_npc(int id)
 	
 	for (auto i = characters.begin(); i != characters.end(); ++i)
 	{
-		if (is_near(id, i->first) && i->first < MAX_USER)
-			old_viewlist.insert(i->first);
+		if (i->first < MAX_USER)
+			if (is_near(id, i->first))
+				old_viewlist.insert(i->first);
 	}
-	int x = characters[id]->GetInfo()->x;
-	int y = characters[id]->GetInfo()->y;
+	auto npc = characters[id];
+	int x = npc->GetInfo()->x;
+	int y = npc->GetInfo()->y;
 	switch (rand() % 4)
 	{
 	case 0: if (x > 0) x--; break;
@@ -189,22 +191,23 @@ void CServer::random_move_npc(int id)
 	case 2: if (y > 0) y--; break;
 	case 3: if (y < (WORLD_HEIGHT - 1)) y++; break;
 	}
-	characters[id]->GetInfo()->x = x;
-	characters[id]->GetInfo()->y = y;
+	npc->GetInfo()->x = x;
+	npc->GetInfo()->y = y;
 	std::unordered_set <int> new_viewlist;
 	for (auto i = characters.begin(); i != characters.end(); ++i)
 	{
-		if (is_near(id, i->first) && i->first < MAX_USER)
-			new_viewlist.insert(i->first);
+		if (i->first < MAX_USER)
+			if (is_near(id, i->first))
+				new_viewlist.insert(i->first);
 	}
 
 	for (auto pl : old_viewlist) {
 		auto player = reinterpret_cast<CClient*>(characters[pl]);
 		if (0 < new_viewlist.count(pl)) {
 			if (0 < player->GetViewlist().count(id))
-				player->send_move_packet(characters[id]);
+				player->send_move_packet(npc);
 			else
-				player->EnterPlayer(characters[id]);
+				player->EnterPlayer(npc);
 		}
 		else
 		{
@@ -217,9 +220,9 @@ void CServer::random_move_npc(int id)
 		auto player = reinterpret_cast<CClient*>(characters[pl]);
 		if (0 == player->GetViewlist().count(pl)) {
 			if (0 == player->GetViewlist().count(id))
-				player->EnterPlayer(characters[id]);
+				player->EnterPlayer(npc);
 			else
-				player->send_move_packet(characters[id]);
+				player->send_move_packet(npc);
 		}
 	}
 
@@ -276,15 +279,6 @@ void CServer::disconnect_client(int id)
 
 	while (!characters.unsafe_erase(id));
 	delete client;
-
-	//if (!std::atomic_compare_exchange_strong(
-	//	reinterpret_cast<std::atomic_int*>(characters[id]),
-	//	reinterpret_cast<int*>(client),
-	//	reinterpret_cast<int>(nullptr)) && characters.unsafe_erase(id))
-	//{
-	//	characters.unsafe_erase(id);
-	//	delete client;
-	//}
 }
 
 void CServer::wake_up_npc(int id)

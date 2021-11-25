@@ -340,9 +340,9 @@ void client_main()
 				ghost.a_draw();
 			}
 		}
-	//avatar.draw();
-	////for (auto& npc : npcs) 
-	////	npc.second.draw();
+	avatar.draw();
+	//for (auto& npc : npcs) 
+	//	npc.second.draw();
 	//sf::Text text;
 	//text.setFont(g_font);
 	//char buf[100];
