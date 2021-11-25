@@ -48,11 +48,11 @@ void CClient::Teleport(short x, short y)
 
 void CClient::Release()
 {
-	this->GetInfo()->c_lock.lock();
+	//this->GetInfo()->c_lock.lock();
 	viewList.clear();
 	closesocket(this->m_sock);
 	this->m_sock = 0;
-	this->GetInfo()->c_lock.unlock();
+	//this->GetInfo()->c_lock.unlock();
 }
 
 void CClient::AutoHeal()

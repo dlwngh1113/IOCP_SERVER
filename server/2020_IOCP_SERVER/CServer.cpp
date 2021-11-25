@@ -49,6 +49,7 @@ void CServer::run()
 	ai_thread.join();
 
 	dbConnector->Release();
+	delete CTimer::GetInstance();
 	closesocket(g_lSocket);
 	::WSACleanup();
 }
@@ -81,8 +82,8 @@ void error_display(const char* msg, int err_no)
 		NULL, err_no,
 		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 		(LPTSTR)&lpMsgBuf, 0, NULL);
-	std::cout << msg;
-	std::wcout << L"¿¡·¯ " << lpMsgBuf << std::endl;
+	printf("%s[%d]: ", msg, err_no);
+	std::wcout << lpMsgBuf << std::endl;
 	while (true);
 	LocalFree(lpMsgBuf);
 }
@@ -103,7 +104,8 @@ void CServer::worker_thread()
 		key = static_cast<int>(iocp_key);
 		// cout << "Completion Detected" << endl;
 		if (FALSE == ret) {
-			error_display("GQCS Error : ", WSAGetLastError());
+			//error_display("GQCS Error", WSAGetLastError());
+			//continue;
 		}
 
 		OVER_EX* over_ex = reinterpret_cast<OVER_EX*>(lpover);
@@ -123,7 +125,7 @@ void CServer::worker_thread()
 			delete over_ex;
 			break;
 		case OP_RANDOM_MOVE:
-			if (reinterpret_cast<CClient*>(characters[key])->GetInfo()->hp > 0)
+			if (reinterpret_cast<CMonster*>(characters[key])->GetInfo()->hp > 0)
 				random_move_npc(key);
 			delete over_ex;
 			break;
@@ -235,10 +237,10 @@ void CServer::random_move_npc(int id)
 void CServer::add_new_client(SOCKET ns)
 {
 	int i;
-	//id_lock.lock();
+	id_lock.lock();
 	for (i = 0; i < MAX_USER; ++i)
 		if (0 == characters.count(i)) break;
-	//id_lock.unlock();
+	id_lock.unlock();
 	if (MAX_USER == i) {
 		std::cout << "Max user limit exceeded.\n";
 		closesocket(ns);
@@ -248,9 +250,9 @@ void CServer::add_new_client(SOCKET ns)
 		CClient* client = new CClient(i, "", 
 			rand() % WORLD_WIDTH, 
 			rand() % WORLD_HEIGHT, ns);
+		characters[i] = client;
 		CreateIoCompletionPort(reinterpret_cast<HANDLE>(ns), h_iocp, i, 0);
 		client->StartRecv();
-		characters[i] = client;
 		CTimer::GetInstance()->add_timer(i, OP_HEAL, std::chrono::system_clock::now() + std::chrono::seconds(5));
 	}
 
@@ -266,17 +268,23 @@ void CServer::disconnect_client(int id)
 	auto client = reinterpret_cast<CClient*>(characters[id]);
 	for (const auto& i : client->GetViewlist())
 		reinterpret_cast<CClient*>(characters[i])->ErasePlayer(id);
+
+	client->GetInfo()->c_lock.lock();
 	dbConnector->set_userdata(client, false);
 	client->Release();
+	client->GetInfo()->c_lock.unlock();
 
-	if (!std::atomic_compare_exchange_strong(
-		reinterpret_cast<std::atomic_int*>(characters[id]),
-		reinterpret_cast<int*>(client),
-		reinterpret_cast<int>(nullptr)) && characters.unsafe_erase(id))
-	{
-		characters.unsafe_erase(id);
-		delete client;
-	}
+	while (!characters.unsafe_erase(id));
+	delete client;
+
+	//if (!std::atomic_compare_exchange_strong(
+	//	reinterpret_cast<std::atomic_int*>(characters[id]),
+	//	reinterpret_cast<int*>(client),
+	//	reinterpret_cast<int>(nullptr)) && characters.unsafe_erase(id))
+	//{
+	//	characters.unsafe_erase(id);
+	//	delete client;
+	//}
 }
 
 void CServer::wake_up_npc(int id)
