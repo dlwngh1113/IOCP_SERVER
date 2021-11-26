@@ -452,7 +452,7 @@ int main()
 					send_move_packet(MV_DOWN);
 					break;
 				case sf::Keyboard::Escape:
-					send_logout_packet();
+					//send_logout_packet();
 					window.close();
 					break;
 				case sf::Keyboard::A:
@@ -466,7 +466,7 @@ int main()
 		client_main();
 		window.display();
 	}
-	send_logout_packet();
+	//send_logout_packet();
 	client_finish();
 
 	return 0;
