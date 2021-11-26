@@ -33,7 +33,7 @@ private:
 	sf::Text m_name;
 
 public:
-	int m_x{ 0 }, m_y{ 0 };
+	short m_x{ 0 }, m_y{ 0 };
 	short hp{ 0 };
 	short level{ 0 };
 	int   exp{ 0 };
@@ -57,7 +57,7 @@ public:
 		m_showing = false;
 	}
 
-	void a_move(int x, int y) {
+	void a_move(short x, short y) {
 		m_sprite.setPosition((float)x, (float)y);
 	}
 
@@ -65,7 +65,7 @@ public:
 		g_window->draw(m_sprite);
 	}
 
-	void move(int x, int y) {
+	void move(short x, short y) {
 		m_x = x;
 		m_y = y;
 	}
@@ -145,19 +145,19 @@ void ProcessPacket(char* ptr)
 	{
 		sc_packet_login_ok* my_packet = reinterpret_cast<sc_packet_login_ok*>(ptr);
 		g_myid = my_packet->id;
-		avatar.exp = my_packet->exp;
+		avatar.move(my_packet->x, my_packet->y);
 		avatar.hp = my_packet->hp;
 		avatar.level = my_packet->level;
-		avatar.move(my_packet->x, my_packet->y);
+		avatar.exp = my_packet->exp;
 		g_left_x = my_packet->x - CLIENT_WIDTH / 2;
 		g_top_y = my_packet->y - CLIENT_HEIGHT / 2;
-		printf("%d %d %d %d %d %d\n",
-			my_packet->id,
-			my_packet->hp,
-			my_packet->exp,
-			my_packet->level,
-			avatar.m_x,
-			avatar.m_y);
+		//printf("%d %d %d %d %d %d\n",
+		//	my_packet->id,
+		//	my_packet->hp,
+		//	my_packet->exp,
+		//	my_packet->level,
+		//	avatar.m_x,
+		//	avatar.m_y);
 		avatar.show();
 	}
 	break;
@@ -184,10 +184,10 @@ void ProcessPacket(char* ptr)
 		sc_packet_enter* my_packet = reinterpret_cast<sc_packet_enter*>(ptr);
 		int id = my_packet->id;
 
-		printf("%d %d %d\n",
-			my_packet->id,
-			avatar.m_x,
-			avatar.m_y);
+		//printf("%d %d %d\n",
+		//	my_packet->id,
+		//	avatar.m_x,
+		//	avatar.m_y);
 
 		if (id == g_myid) {
 			avatar.move(my_packet->x, my_packet->y);
@@ -341,26 +341,26 @@ void client_main()
 			}
 		}
 	avatar.draw();
-	//for (auto& npc : npcs) 
-	//	npc.second.draw();
-	//sf::Text text;
-	//text.setFont(g_font);
-	//char buf[100];
-	//sprintf_s(buf, "(%d, %d)", avatar.m_x, avatar.m_y);
-	//text.setString(buf);
-	//g_window->draw(text);
+	for (auto& npc : npcs) 
+		npc.second.draw();
+	sf::Text text;
+	text.setFont(g_font);
+	char buf[100];
+	sprintf_s(buf, "(%d, %d)", avatar.m_x, avatar.m_y);
+	text.setString(buf);
+	g_window->draw(text);
 
-	//sprintf_s(buf, "Level-%hd, Hp-%hd, Exp-%d", avatar.level, avatar.hp, avatar.exp);
-	//text.setString(buf);
-	//text.setCharacterSize(20);
-	//text.setPosition(CLIENT_WIDTH * TILE_WIDTH / 4, 0.f);
-	//g_window->draw(text);
+	sprintf_s(buf, "Level-%hd, Hp-%hd, Exp-%d", avatar.level, avatar.hp, avatar.exp);
+	text.setString(buf);
+	text.setCharacterSize(20);
+	text.setPosition(CLIENT_WIDTH * TILE_WIDTH / 4, 0.f);
+	g_window->draw(text);
 
-	//for (int i = 0; i < g_chatLog.size(); ++i) {
-	//	g_chatLog[i].setPosition(0,
-	//		CLIENT_HEIGHT * TILE_WIDTH * 0.75 + 20 * i);
-	//	g_window->draw(g_chatLog[i]);
-	//}
+	for (int i = 0; i < g_chatLog.size(); ++i) {
+		g_chatLog[i].setPosition(0,
+			CLIENT_HEIGHT * TILE_WIDTH * 0.75 + 20 * i);
+		g_window->draw(g_chatLog[i]);
+	}
 }
 
 void send_packet(void* packet)
