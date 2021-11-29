@@ -2,7 +2,6 @@
 
 CServer::CServer()
 {
-	CTimer::GetInstance()->SetHandle(h_iocp);
 	dbConnector = new CDBConnector();
 }
 
@@ -38,19 +37,17 @@ void CServer::run()
 	ZeroMemory(&g_accept_over.wsa_over, sizeof(&g_accept_over.wsa_over));
 	AcceptEx(g_lSocket, cSocket, g_accept_over.iocp_buf, 0, 32, 32, NULL, &g_accept_over.wsa_over);
 
+	CTimer::GetInstance()->SetHandle(h_iocp);
 	initialize_NPC();
 
-	std::thread ai_thread{ [&]() {npc_ai_thread(); } };
 	std::vector <std::thread> worker_threads;
 	for (int i = 0; i < 4; ++i)
 		worker_threads.emplace_back([&]() {worker_thread(); });
 	CTimer::GetInstance()->join();
 	for (auto& th : worker_threads)
 		th.join();
-	ai_thread.join();
 
 	dbConnector->Release();
-	delete CTimer::GetInstance();
 	closesocket(g_lSocket);
 	::WSACleanup();
 }
@@ -106,7 +103,6 @@ void CServer::worker_thread()
 		// cout << "Completion Detected" << endl;
 		if (FALSE == ret) {
 			//error_display("GQCS Error", WSAGetLastError());
-			//continue;
 		}
 
 		OVER_EX* over_ex = reinterpret_cast<OVER_EX*>(lpover);
@@ -126,7 +122,7 @@ void CServer::worker_thread()
 			delete over_ex;
 			break;
 		case OP_RANDOM_MOVE:
-			if (reinterpret_cast<CMonster*>(characters[key])->GetInfo()->hp > 0)
+			if (characters[key]->GetInfo()->hp > 0)
 				random_move_npc(key);
 			delete over_ex;
 			break;
@@ -158,20 +154,6 @@ void CServer::worker_thread()
 	}
 }
 
-void CServer::npc_ai_thread()
-{
-	while (true) {
-		auto start_time = std::chrono::system_clock::now();
-		for (int i = MAX_USER; i < MAX_USER + NUM_NPC; ++i)
-			if (characters[i]->GetInfo()->hp > 0)
-				random_move_npc(i);
-		auto end_time = std::chrono::system_clock::now();
-		auto exec_time = end_time - start_time;
-		std::cout << "AI exec time = " << std::chrono::duration_cast<std::chrono::seconds>(exec_time).count() << "s\n";
-		std::this_thread::sleep_for(std::chrono::seconds(1) - (end_time - start_time));
-	}
-}
-
 void CServer::random_move_npc(int id)
 {
 	std::unordered_set <int> old_viewlist;
@@ -185,6 +167,7 @@ void CServer::random_move_npc(int id)
 	auto npc = characters[id];
 	int x = npc->GetInfo()->x;
 	int y = npc->GetInfo()->y;
+	std::cout << "before random move :" << x << ", " << y << std::endl;
 	switch (rand() % 4)
 	{
 	case 0: if (x > 0) x--; break;
@@ -192,6 +175,7 @@ void CServer::random_move_npc(int id)
 	case 2: if (y > 0) y--; break;
 	case 3: if (y < (WORLD_HEIGHT - 1)) y++; break;
 	}
+	std::cout << "after random move :" << x << ", " << y << std::endl;
 	npc->GetInfo()->x = x;
 	npc->GetInfo()->y = y;
 	std::unordered_set <int> new_viewlist;
@@ -227,7 +211,9 @@ void CServer::random_move_npc(int id)
 		}
 	}
 
-	if (!new_viewlist.empty())
+	if (new_viewlist.empty())
+		1;
+	else
 		CTimer::GetInstance()->add_timer(id, OP_RANDOM_MOVE, std::chrono::system_clock::now() + std::chrono::seconds(1));
 
 	for (auto pc : new_viewlist) {
@@ -411,7 +397,7 @@ void CServer::process_login(cs_packet_login* p, int id)
 				if (0 == i->second->GetViewlist().count(id))
 					reinterpret_cast<CClient*>(i->second)->EnterPlayer(client);
 				if (0 == client->GetViewlist().count(i->first))
-					client->EnterPlayer(reinterpret_cast<CClient*>(i->second));
+					client->EnterPlayer(i->second);
 			}
 		}
 	}
@@ -420,8 +406,8 @@ void CServer::process_login(cs_packet_login* p, int id)
 void CServer::process_move(int id, char dir)
 {
 	auto client = reinterpret_cast<CClient*>(characters[id]);
-	short y = client->GetInfo()->x;
-	short x = client->GetInfo()->y;
+	short x = client->GetInfo()->x;
+	short y = client->GetInfo()->y;
 	switch (dir) {
 	case MV_UP: if (y > 0)
 		client->Move(0, -1);

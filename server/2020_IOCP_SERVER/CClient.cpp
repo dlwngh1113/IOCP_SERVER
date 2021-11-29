@@ -57,7 +57,7 @@ void CClient::Release()
 
 void CClient::AutoHeal()
 {
-	this->GetInfo()->c_lock.lock();
+	//this->GetInfo()->c_lock.lock();
 	short maxHp = GetInfo()->level * 70;
 	if (GetInfo()->hp + maxHp * 0.1 >= maxHp)
 		GetInfo()->hp = maxHp;
@@ -66,7 +66,7 @@ void CClient::AutoHeal()
 	char mess[MAX_STR_LEN];
 	sprintf_s(mess, "auto healing...%s", GetInfo()->name.c_str());
 	send_heal_packet(mess);
-	this->GetInfo()->c_lock.unlock();
+	//this->GetInfo()->c_lock.unlock();
 }
 
 void CClient::LevelUp(int targetID, int exp)
@@ -219,8 +219,8 @@ void CClient::EnterPlayer(CCharacter* other)
 {
 	viewLock.lock();
 	viewList.insert(other->GetInfo()->id);
-	send_enter_packet(other);
 	viewLock.unlock();
+	send_enter_packet(other);
 }
 
 void CClient::IncreaseBuffer(DWORD iosize, long long left_data)

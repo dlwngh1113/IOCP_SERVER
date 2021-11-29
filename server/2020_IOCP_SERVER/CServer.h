@@ -22,7 +22,6 @@ public:
 	void run();
 	void initialize_NPC();
 	void worker_thread();
-	void npc_ai_thread();
 	void random_move_npc(int id);
 	void add_new_client(SOCKET ns);
 	void disconnect_client(int id);

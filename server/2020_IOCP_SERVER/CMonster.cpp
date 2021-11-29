@@ -8,6 +8,15 @@ CMonster::CMonster() :CCharacter()
 CMonster::CMonster(int id, std::string name, short x, short y, short level) : CCharacter(id, name, x, y)
 {
 	L = luaL_newstate();
+	luaL_openlibs(L);
+
+	int error = luaL_loadfile(L, "monster.lua");
+	error = lua_pcall(L, 0, 0, 0);
+
+	lua_getglobal(L, "set_uid");
+	lua_pushnumber(L, id);
+	lua_pcall(L, 1, 1, 0);
+	lua_pop(L, 1);// eliminate set_uid from stack after call
 }
 
 CMonster::CMonster(CInfo* info) : CCharacter{ info }

@@ -77,13 +77,8 @@ void CTimer::time_worker()
 
 void CTimer::send_chat_packet(int to_client, int id, char* mess)
 {
-	sc_packet_chat p;
-	p.id = id;
-	p.size = sizeof(p);
-	p.type = SC_PACKET_CHAT;
-	strcpy_s(p.message, mess);
-	auto client = reinterpret_cast<CClient*>(CServer::characters[id]);
-	client->send_chat_packet(to_client, mess);
+	auto client = reinterpret_cast<CClient*>(CServer::characters[to_client]);
+	client->send_chat_packet(id, mess);
 }
 
 void CTimer::join()
