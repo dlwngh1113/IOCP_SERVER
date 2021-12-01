@@ -48,11 +48,10 @@ void CClient::Teleport(short x, short y)
 
 void CClient::Release()
 {
-	//this->GetInfo()->c_lock.lock();
 	viewList.clear();
+	GetInfo()->isUse = false;
 	closesocket(this->m_sock);
 	this->m_sock = 0;
-	//this->GetInfo()->c_lock.unlock();
 }
 
 void CClient::AutoHeal()
@@ -71,16 +70,16 @@ void CClient::AutoHeal()
 
 void CClient::LevelUp(int targetID, int exp)
 {
-	GetInfo()->c_lock.lock();
 	send_leave_packet(targetID);
+	GetInfo()->c_lock.lock();
 	GetInfo()->exp += exp;
 	if (GetInfo()->exp > GetInfo()->level * 100) {
 		GetInfo()->level += 1;
 		GetInfo()->exp -= GetInfo()->level * 100;
 		GetInfo()->hp = GetInfo()->level * 70;
 	}
-	send_stat_change();
 	GetInfo()->c_lock.unlock();
+	send_stat_change();
 }
 
 void CClient::HitByPlayer(char* mess)
@@ -254,10 +253,10 @@ void CClient::send_packet(void* p)
 	send_over->wsa_buf.buf = reinterpret_cast<CHAR*>(send_over->iocp_buf);
 	send_over->wsa_buf.len = packet[0];
 	ZeroMemory(&send_over->wsa_over, sizeof(send_over->wsa_over));
-	this->GetInfo()->c_lock.lock();
+	GetInfo()->c_lock.lock();
 	WSASend(this->m_sock, &send_over->wsa_buf, 1,
 		NULL, 0, &send_over->wsa_over, NULL);
-	this->GetInfo()->c_lock.unlock();
+	GetInfo()->c_lock.unlock();
 }
 
 unsigned char*& CClient::getPacketStart()

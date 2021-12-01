@@ -7,7 +7,7 @@ public:
 	std::string name;
 	short x{ 0 }, y{ 0 };
 
-	bool isAttkable{ true };
+	bool isUse{ true };
 	short atk{ 0 };
 	short hp{ 0 };
 	short level{ 0 };

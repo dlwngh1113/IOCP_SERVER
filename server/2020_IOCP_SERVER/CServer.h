@@ -28,7 +28,7 @@ public:
 
 	void wake_up_npc(int id);
 	
-	bool is_near(int p1, int p2);
+	static bool is_near(int p1, int p2);
 	bool is_npc(int id);
 	bool isIn_atkRange(int p1, int p2);
 

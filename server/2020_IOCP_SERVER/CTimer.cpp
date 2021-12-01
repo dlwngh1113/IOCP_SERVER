@@ -9,11 +9,6 @@ CTimer::~CTimer()
 {
 }
 
-void CTimer::SetHandle(HANDLE h_iocp)
-{
-	this->h_iocp = h_iocp;
-}
-
 void CTimer::add_timer(int obj_id, int ev_type, std::chrono::system_clock::time_point t, int target_id, char* mess)
 {
 	CEvent ev{ obj_id, t, ev_type, target_id, mess };
@@ -52,6 +47,15 @@ void CTimer::time_worker()
 				break;
 				case OP_REVIVAL:
 				{
+					auto player = reinterpret_cast<CClient*>(CServer::characters[ev.obj_id]);
+					player->GetInfo()->level = rand() % 10 + 1;
+					player->GetInfo()->hp = player->GetInfo()->level * 100;
+					for (auto i = CServer::characters.begin(); i != CServer::characters.end(); ++i)
+					{
+						if (CServer::is_near(ev.obj_id, i->first) && i->first < MAX_USER)
+							player->EnterPlayer(CServer::characters[i->first]);
+					}
+
 					OVER_EX* over_ex = new OVER_EX;
 					over_ex->op_mode = OP_REVIVAL;
 					PostQueuedCompletionStatus(h_iocp, 1, ev.obj_id, &over_ex->wsa_over);

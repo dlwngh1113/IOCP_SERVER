@@ -8,6 +8,9 @@ CServer::CServer()
 CServer::~CServer()
 {
 	delete dbConnector;
+	for (auto i = characters.begin(); i != characters.end(); ++i)
+		delete i->second;
+	characters.clear();
 	delete CTimer::GetInstance();
 }
 
@@ -61,6 +64,7 @@ void CServer::initialize_NPC()
 		sprintf_s(npc_name, "N%d", i);
 
 		auto monster = new CMonster(i, npc_name, rand() % WORLD_WIDTH, rand() % WORLD_HEIGHT, rand() % 10 + 1);
+		monster->GetInfo()->isUse = false;
 		characters[i] = monster;
 
 		lua_register(monster->GetLua(), "API_SendEnterMessage", API_SendEnterMessage);
@@ -132,21 +136,9 @@ void CServer::worker_thread()
 			break;
 		case OP_HEAL:
 		{
-			reinterpret_cast<CClient*>(characters[key])->AutoHeal();
+			auto client = reinterpret_cast<CClient*>(characters[key]);
+			client->AutoHeal();
 			CTimer::GetInstance()->add_timer(key, OP_HEAL, std::chrono::system_clock::now() + std::chrono::seconds(5));
-			delete over_ex;
-		}
-			break;
-		case OP_REVIVAL:
-		{
-			auto player = reinterpret_cast<CClient*>(characters[key]);
-			player->GetInfo()->level = rand() % 10 + 1;
-			player->GetInfo()->hp = player->GetInfo()->level * 100;
-			for (auto i = characters.begin(); i != characters.end(); ++i)
-			{
-				if (is_near(key, i->first) && i->first < MAX_USER)
-					player->EnterPlayer(characters[i->first]);
-			}
 			delete over_ex;
 		}
 			break;
@@ -167,7 +159,6 @@ void CServer::random_move_npc(int id)
 	auto npc = characters[id];
 	int x = npc->GetInfo()->x;
 	int y = npc->GetInfo()->y;
-	std::cout << "before random move :" << x << ", " << y << std::endl;
 	switch (rand() % 4)
 	{
 	case 0: if (x > 0) x--; break;
@@ -175,7 +166,6 @@ void CServer::random_move_npc(int id)
 	case 2: if (y > 0) y--; break;
 	case 3: if (y < (WORLD_HEIGHT - 1)) y++; break;
 	}
-	std::cout << "after random move :" << x << ", " << y << std::endl;
 	npc->GetInfo()->x = x;
 	npc->GetInfo()->y = y;
 	std::unordered_set <int> new_viewlist;
@@ -212,7 +202,7 @@ void CServer::random_move_npc(int id)
 	}
 
 	if (new_viewlist.empty())
-		1;
+		npc->GetInfo()->isUse = false;
 	else
 		CTimer::GetInstance()->add_timer(id, OP_RANDOM_MOVE, std::chrono::system_clock::now() + std::chrono::seconds(1));
 
@@ -229,7 +219,17 @@ void CServer::add_new_client(SOCKET ns)
 	int i;
 	id_lock.lock();
 	for (i = 0; i < MAX_USER; ++i)
+	{
 		if (0 == characters.count(i)) break;
+		else
+		{
+			if (!characters[i]->GetInfo()->isUse)
+			{
+				delete characters[i];
+				break;
+			}
+		}
+	}
 	id_lock.unlock();
 	if (MAX_USER == i) {
 		std::cout << "Max user limit exceeded.\n";
@@ -256,21 +256,37 @@ void CServer::add_new_client(SOCKET ns)
 void CServer::disconnect_client(int id)
 {
 	auto client = reinterpret_cast<CClient*>(characters[id]);
-	for (const auto& i : client->GetViewlist())
-		reinterpret_cast<CClient*>(characters[i])->ErasePlayer(id);
+	for (auto i = characters.begin(); i != characters.end(); ++i)
+	{
+		if (i->first < MAX_USER)
+		{
+			if (i->first != id)
+			{
+				if (0 != i->second->GetViewlist().count(id))
+				{
+					i->second->GetViewlist().erase(id);
+					reinterpret_cast<CClient*>(i->second)->ErasePlayer(id);
+				}
+			}
+		}
+	}
 
 	client->GetInfo()->c_lock.lock();
 	dbConnector->set_userdata(client, false);
 	client->Release();
 	client->GetInfo()->c_lock.unlock();
-
-	while (!characters.unsafe_erase(id));
-	delete client;
 }
 
 void CServer::wake_up_npc(int id)
 {
-	CTimer::GetInstance()->add_timer(id, OP_RANDOM_MOVE, std::chrono::system_clock::now() + std::chrono::seconds(1));
+	bool b = false;
+	if(std::atomic_compare_exchange_strong(
+			reinterpret_cast<std::atomic_int*>(&(characters[id]->GetInfo()->isUse)),
+			reinterpret_cast<int*>(&b),
+			true))
+	{
+		CTimer::GetInstance()->add_timer(id, OP_RANDOM_MOVE, std::chrono::system_clock::now() + std::chrono::seconds(1));
+	}
 }
 
 bool CServer::is_near(int p1, int p2)
@@ -496,17 +512,19 @@ void CServer::process_attack(int id)
 		if (isIn_atkRange(id, i)) {
 			if (is_npc(i)) {
 				char mess[MAX_STR_LEN];
-				if (characters[i]->GetDamage(client->GetInfo()->atk))
+				auto npc = reinterpret_cast<CMonster*>(characters[i]);
+				if (npc->GetDamage(client->GetInfo()->atk))
 				{
 					sprintf_s(mess, MAX_STR_LEN, "%s had %d damage. %d left",
-						characters[i]->GetInfo()->name.c_str(), client->GetInfo()->atk, characters[i]->GetInfo()->hp);
+						npc->GetInfo()->name.c_str(), client->GetInfo()->atk, npc->GetInfo()->hp);
 				}
 				client->send_chat_packet(i, mess);
 
-				if (characters[i]->GetInfo()->hp <= 0) {
+				if (npc->GetInfo()->hp <= 0) {
 					CTimer::GetInstance()->add_timer(i, OP_REVIVAL, std::chrono::system_clock::now() + std::chrono::seconds(30));
-					sprintf_s(mess, "%s has dead, %d exp gain",
-						characters[i]->GetInfo()->name.c_str(), characters[i]->GetInfo()->level * 10);
+					sprintf_s(mess, MAX_STR_LEN, "%s has dead, %d exp gain",
+						npc->GetInfo()->name.c_str(), npc->GetInfo()->level * 10);
+					client->LevelUp(i, npc->GetInfo()->level * 10);
 				}
 			}
 		}
