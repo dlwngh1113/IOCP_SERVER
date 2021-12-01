@@ -32,8 +32,8 @@ void CClient::SetInfo(const char* name, short level, short x, short y, int exp, 
 {
 	this->GetInfo()->c_lock.lock();
 	GetInfo()->name = name;
-
 	GetInfo()->level = level;
+	GetInfo()->atk = level * 10;
 	GetInfo()->x = x;
 	GetInfo()->y = y;
 	GetInfo()->exp = exp;
@@ -110,14 +110,6 @@ void CClient::send_login_ok()
 	p.type = SC_PACKET_LOGIN_OK;
 	p.x = GetInfo()->x;
 	p.y = GetInfo()->y;
-	//printf("%s %d %d %d %d %d %d",
-	//	GetInfo()->name.c_str(),
-	//	GetInfo()->id,
-	//	GetInfo()->hp,
-	//	GetInfo()->exp,
-	//	GetInfo()->level,
-	//	GetInfo()->x,
-	//	GetInfo()->y);
 	send_packet(&p);
 }
 

@@ -63,8 +63,12 @@ void CServer::initialize_NPC()
 		char npc_name[50];
 		sprintf_s(npc_name, "N%d", i);
 
-		auto monster = new CMonster(i, npc_name, rand() % WORLD_WIDTH, rand() % WORLD_HEIGHT, rand() % 10 + 1);
-		monster->GetInfo()->isUse = false;
+		CInfo* info = new CInfo(i, npc_name, rand() % WORLD_WIDTH, rand() % WORLD_HEIGHT);
+		info->level = rand() % 10 + 1;
+		info->atk = info->level * 0.1;
+		info->hp = info->level * 10;
+		info->isUse = false;
+		auto monster = new CMonster(info);
 		characters[i] = monster;
 
 		lua_register(monster->GetLua(), "API_SendEnterMessage", API_SendEnterMessage);
@@ -240,6 +244,7 @@ void CServer::add_new_client(SOCKET ns)
 		CClient* client = new CClient(i, "", 
 			rand() % WORLD_WIDTH, 
 			rand() % WORLD_HEIGHT, ns);
+		client->GetInfo()->atk = client->GetInfo()->level * 10;
 		characters[i] = client;
 		CreateIoCompletionPort(reinterpret_cast<HANDLE>(ns), h_iocp, i, 0);
 		client->StartRecv();
@@ -563,6 +568,13 @@ int CServer::API_SendEnterMessage(lua_State* L)
 	{
 		monster->GetInfo()->atk_time = std::chrono::system_clock::now().time_since_epoch().count();
 		client->GetDamage(monster->GetInfo()->atk);
+
+		if (client->GetInfo()->hp <= 0)
+		{
+			client->Teleport(0, 0);
+			client->GetInfo()->exp /= 2;
+			client->GetInfo()->hp = client->GetInfo()->level * 70;
+		}
 
 		client->send_stat_change();
 		char tmp[MAX_STR_LEN];
