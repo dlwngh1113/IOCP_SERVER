@@ -65,7 +65,7 @@ void CServer::initialize_NPC()
 
 		CInfo* info = new CInfo(i, npc_name, rand() % WORLD_WIDTH, rand() % WORLD_HEIGHT);
 		info->level = rand() % 10 + 1;
-		info->atk = info->level * 0.1;
+		info->atk = info->level;
 		info->hp = info->level * 10;
 		info->isUse = false;
 		auto monster = new CMonster(info);
@@ -284,14 +284,8 @@ void CServer::disconnect_client(int id)
 
 void CServer::wake_up_npc(int id)
 {
-	bool b = false;
-	if(std::atomic_compare_exchange_strong(
-			reinterpret_cast<std::atomic_int*>(&(characters[id]->GetInfo()->isUse)),
-			reinterpret_cast<int*>(&b),
-			true))
-	{
-		CTimer::GetInstance()->add_timer(id, OP_RANDOM_MOVE, std::chrono::system_clock::now() + std::chrono::seconds(1));
-	}
+	CTimer::GetInstance()->add_timer(id, OP_RANDOM_MOVE, std::chrono::system_clock::now() + std::chrono::seconds(1));
+	//std::cout << "wake_up_npc called id - " << id << std::endl;
 }
 
 bool CServer::is_near(int p1, int p2)
@@ -409,7 +403,7 @@ void CServer::process_login(cs_packet_login* p, int id)
 			//npc case
 			if (i->first > MAX_USER)
 			{
-				client->EnterPlayer(reinterpret_cast<CClient*>(i->second));
+				client->EnterPlayer(i->second);
 				wake_up_npc(i->first);
 			}
 			//player case
@@ -456,7 +450,7 @@ void CServer::process_move(int id, char dir)
 		if (is_near(id, i->first))
 		{
 			new_viewlist.insert(i->first);
-			if (i->first > MAX_USER)
+			if (i->first > MAX_USER && !(old_viewlist.count(i->first)))
 				wake_up_npc(i->first);
 		}
 	}
@@ -564,25 +558,30 @@ int CServer::API_SendEnterMessage(lua_State* L)
 	auto monster = reinterpret_cast<CMonster*>(characters[my_id]);
 	auto client = reinterpret_cast<CClient*>(characters[user_id]);
 
-	if (std::chrono::system_clock::now().time_since_epoch().count() > monster->GetInfo()->atk_time)
+	if (monster->GetInfo()->isUse)
 	{
-		monster->GetInfo()->atk_time = std::chrono::system_clock::now().time_since_epoch().count();
-		client->GetDamage(monster->GetInfo()->atk);
-
-		if (client->GetInfo()->hp <= 0)
+		if (std::chrono::system_clock::now().time_since_epoch().count() > monster->GetInfo()->atk_time)
 		{
-			client->Teleport(0, 0);
-			client->GetInfo()->exp /= 2;
-			client->GetInfo()->hp = client->GetInfo()->level * 70;
+			monster->GetInfo()->atk_time = std::chrono::system_clock::now().time_since_epoch().count();
+			client->GetDamage(monster->GetInfo()->atk);
+
+			if (client->GetInfo()->hp <= 0)
+			{
+				client->Teleport(0, 0);
+				client->GetInfo()->exp /= 2;
+				client->GetInfo()->hp = client->GetInfo()->level * 70;
+			}
+
+			client->send_stat_change();
+			char tmp[MAX_STR_LEN];
+			sprintf_s(tmp, "You hit by id - %s", monster->GetInfo()->name.c_str());
+			client->send_chat_packet(user_id, tmp);
 		}
 
-		client->send_stat_change();
-		char tmp[MAX_STR_LEN];
-		sprintf_s(tmp, "You hit by id - %s", monster->GetInfo()->name.c_str());
-		client->send_chat_packet(user_id, tmp);
+		client->send_chat_packet(my_id, mess);
+		return 0;
 	}
 
-	client->send_chat_packet(my_id, mess);
 	return 0;
 }
 

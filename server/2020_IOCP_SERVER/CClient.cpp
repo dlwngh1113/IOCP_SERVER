@@ -74,8 +74,8 @@ void CClient::LevelUp(int targetID, int exp)
 	GetInfo()->c_lock.lock();
 	GetInfo()->exp += exp;
 	if (GetInfo()->exp > GetInfo()->level * 100) {
-		GetInfo()->level += 1;
 		GetInfo()->exp -= GetInfo()->level * 100;
+		GetInfo()->level += 1;
 		GetInfo()->hp = GetInfo()->level * 70;
 	}
 	GetInfo()->c_lock.unlock();
