@@ -152,15 +152,16 @@ void CServer::worker_thread()
 
 void CServer::random_move_npc(int id)
 {
-	std::unordered_set <int> old_viewlist;
-	
-	for (auto i = characters.begin(); i != characters.end(); ++i)
-	{
-		if (i->first < MAX_USER)
-			if (is_near(id, i->first))
-				old_viewlist.insert(i->first);
-	}
 	auto npc = characters[id];
+	std::unordered_set <int> old_viewlist;
+	for (const auto& i : npc->GetViewlist())
+		old_viewlist.insert(i);
+	//for (auto i = characters.begin(); i != characters.end(); ++i)
+	//{
+	//	if (i->first < MAX_USER)
+	//		if (is_near(id, i->first))
+	//			old_viewlist.insert(i->first);
+	//}
 	int x = npc->GetInfo()->x;
 	int y = npc->GetInfo()->y;
 	switch (rand() % 4)
@@ -290,10 +291,11 @@ void CServer::wake_up_npc(int id)
 
 bool CServer::is_near(int p1, int p2)
 {
-	auto player1 = characters[p1];
-	auto player2 = characters[p2];
-	int dist = (player1->GetInfo()->x - player2->GetInfo()->x) * (player1->GetInfo()->x - player2->GetInfo()->x)
-			 + (player1->GetInfo()->y - player2->GetInfo()->y) * (player1->GetInfo()->y - player2->GetInfo()->y);
+	short x1 = characters[p1]->GetInfo()->x;
+	short x2 = characters[p2]->GetInfo()->x;
+	short y1 = characters[p1]->GetInfo()->y;
+	short y2 = characters[p2]->GetInfo()->y;
+	int dist = (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2);
 
 	return dist <= VIEW_LIMIT * VIEW_LIMIT;
 }
