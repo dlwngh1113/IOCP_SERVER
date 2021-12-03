@@ -42,7 +42,7 @@ void CTimer::time_worker()
 				break;
 				case OP_RUNAWAY:
 				{
-					send_chat_packet(ev.target_id, ev.obj_id, ev.message);
+					reinterpret_cast<CClient*>(CServer::characters[ev.target_id])->send_chat_packet(ev.obj_id, ev.message);
 				}
 				break;
 				case OP_REVIVAL:
@@ -77,12 +77,6 @@ void CTimer::time_worker()
 		}
 		std::this_thread::sleep_for(std::chrono::microseconds(1));
 	}
-}
-
-void CTimer::send_chat_packet(int to_client, int id, char* mess)
-{
-	auto client = reinterpret_cast<CClient*>(CServer::characters[to_client]);
-	client->send_chat_packet(id, mess);
 }
 
 void CTimer::join()

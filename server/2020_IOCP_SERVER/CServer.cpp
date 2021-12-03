@@ -44,7 +44,7 @@ void CServer::run()
 	initialize_NPC();
 
 	std::vector <std::thread> worker_threads;
-	for (int i = 0; i < 4; ++i)
+	for (int i = 0; i < 6; ++i)
 		worker_threads.emplace_back([&]() {worker_thread(); });
 	CTimer::GetInstance()->join();
 	for (auto& th : worker_threads)
@@ -152,16 +152,9 @@ void CServer::worker_thread()
 
 void CServer::random_move_npc(int id)
 {
-	auto npc = characters[id];
-	std::unordered_set <int> old_viewlist;
-	for (const auto& i : npc->GetViewlist())
-		old_viewlist.insert(i);
-	//for (auto i = characters.begin(); i != characters.end(); ++i)
-	//{
-	//	if (i->first < MAX_USER)
-	//		if (is_near(id, i->first))
-	//			old_viewlist.insert(i->first);
-	//}
+	auto npc = reinterpret_cast<CMonster*>(characters[id]);
+	std::unordered_set <int> old_viewlist = npc->GetViewlist();
+
 	int x = npc->GetInfo()->x;
 	int y = npc->GetInfo()->y;
 	switch (rand() % 4)
@@ -174,7 +167,7 @@ void CServer::random_move_npc(int id)
 	npc->GetInfo()->x = x;
 	npc->GetInfo()->y = y;
 	std::unordered_set <int> new_viewlist;
-	for (auto i = characters.begin(); i != characters.end(); ++i)
+	for (auto i = characters.cbegin(); i != characters.cend(); ++i)
 	{
 		if (i->first < MAX_USER)
 			if (is_near(id, i->first))
@@ -198,7 +191,8 @@ void CServer::random_move_npc(int id)
 
 	for (auto pl : new_viewlist) {
 		auto player = reinterpret_cast<CClient*>(characters[pl]);
-		if (0 == player->GetViewlist().count(pl)) {
+		if (0 == player->GetViewlist().count(pl)) 
+		{
 			if (0 == player->GetViewlist().count(id))
 				player->EnterPlayer(npc);
 			else
@@ -446,7 +440,7 @@ void CServer::process_move(int id, char dir)
 	client->send_move_packet(client);
 
 	std::unordered_set <int> new_viewlist;
-	for (auto i = characters.begin(); i != characters.end(); ++i)
+	for (auto i = characters.cbegin(); i != characters.cend(); ++i)
 	{
 		if (id == i->first)continue;
 		if (is_near(id, i->first))
@@ -495,9 +489,10 @@ void CServer::process_move(int id, char dir)
 		}
 	}
 
-	if (false == is_npc(id)) {
-		for (auto& npc : new_viewlist) {
-			if (false == is_npc(npc)) continue;
+	for (auto& npc : new_viewlist) 
+	{
+		if (is_npc(npc))
+		{
 			OVER_EX* ex_over = new OVER_EX;
 			ex_over->object_id = id;
 			ex_over->op_mode = OP_PLAYER_MOVE_NOTIFY;
