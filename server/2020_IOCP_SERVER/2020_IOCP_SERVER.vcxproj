@@ -144,7 +144,9 @@
     <ClCompile Include="CDBConnector.cpp" />
     <ClCompile Include="CEvent.cpp" />
     <ClCompile Include="CInfo.cpp" />
+    <ClCompile Include="CMap.cpp" />
     <ClCompile Include="CMonster.cpp" />
+    <ClCompile Include="CSector.cpp" />
     <ClCompile Include="CServer.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
@@ -166,7 +168,9 @@
     <ClInclude Include="CDBConnector.h" />
     <ClInclude Include="CEvent.h" />
     <ClInclude Include="CInfo.h" />
+    <ClInclude Include="CMap.h" />
     <ClInclude Include="CMonster.h" />
+    <ClInclude Include="CSector.h" />
     <ClInclude Include="CServer.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>

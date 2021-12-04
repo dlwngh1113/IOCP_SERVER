@@ -11,8 +11,6 @@ class CServer
 	SOCKET g_lSocket;
 	OVER_EX g_accept_over;
 
-	std::mutex id_lock;
-
 	CDBConnector* dbConnector;
 public:
 	static concurrency::concurrent_unordered_map<int, CCharacter*> characters;
