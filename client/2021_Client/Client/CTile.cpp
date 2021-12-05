@@ -5,32 +5,31 @@ CTile::CTile()
 {
 }
 
+CTile::CTile(LPCTSTR fileName, int x, int y) :CObject(POINT{ x, y })
+{
+	image.Load(fileName);
+}
+
 CTile::~CTile()
 {
+	image.ReleaseDC();
 }
 
 void CTile::Render(HDC MemDC, int scrollX, int scrollY)
 {
-	image.StretchBlt(MemDC, position);
+	image.StretchBlt(MemDC, scrollX + position.x, scrollY + position.y, 16, 16);
 }
 
 void CTile::Move(int dx, int dy)
 {
-	position.left += dx;
-	position.right += dx;
-	position.bottom += dy;
-	position.top += dy;
+	position.x += dx;
+	position.y += dy;
 }
 
 void CTile::Teleport(int x, int y)
 {
-	short hWidth = (position.right - position.left) / 2;
-	short hHeight = (position.bottom - position.top) / 2;
-
-	position.left = x - hWidth;
-	position.right = x + hWidth;
-	position.top = y - hHeight;
-	position.bottom = y + hHeight;
+	position.x = x;
+	position.y = y;
 }
 
 void CTile::Update(float deltaTime)

@@ -10,4 +10,5 @@ public:
 
 	void Render(HDC MemDC);
 	void Render(HDC MemDC, const std::vector<CObject*>& objects);
+	void Move(int dx, int dy);
 };

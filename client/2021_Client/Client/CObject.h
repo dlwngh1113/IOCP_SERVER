@@ -2,10 +2,11 @@
 class CObject
 {
 protected:
-	RECT position{ NULL };
+	POINT position{ NULL };
 	CImage image;
 public:
 	CObject() = default;
+	CObject(POINT p) :position{ p } {}
 	virtual ~CObject() {};
 	virtual void Move(int dx, int dy) = 0;
 	virtual void Teleport(int x, int y) = 0;

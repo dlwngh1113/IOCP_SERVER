@@ -14,3 +14,9 @@ void CCamera::Render(HDC MemDC, const std::vector<CObject*>& objects)
 	for (auto& obj : objects)
 		obj->Render(MemDC, scrollX, scrollY);
 }
+
+void CCamera::Move(int dx, int dy)
+{
+	scrollX += dx;
+	scrollY += dy;
+}

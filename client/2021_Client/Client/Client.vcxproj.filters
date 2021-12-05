@@ -39,6 +39,9 @@
     <ClInclude Include="CTile.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="CMaptoolScene.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -60,6 +63,9 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="CTile.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="CMaptoolScene.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>

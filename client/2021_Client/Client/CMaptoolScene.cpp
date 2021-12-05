@@ -1,20 +1,16 @@
 #include "pch.h"
-#include "CScene.h"
+#include "CMaptoolScene.h"
 
-CScene::CScene()
+CMaptoolScene::CMaptoolScene() : CScene()
 {
-	camera = new CCamera;
 }
 
-CScene::~CScene()
+CMaptoolScene::~CMaptoolScene()
 {
-	delete camera;
-	for (auto& obj : objects)
-		delete obj;
-	printf("scene destructor called");
+	printf("maptool scene destructor called");
 }
 
-void CScene::Render(HDC hDC)
+void CMaptoolScene::Render(HDC hDC)
 {
 	HDC MemDC = CreateCompatibleDC(hDC);
 	HBITMAP hBit = CreateCompatibleBitmap(hDC, SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -33,26 +29,37 @@ void CScene::Render(HDC hDC)
 	DeleteDC(MemDC);
 }
 
-LRESULT CScene::KeyInputProcess(WPARAM wParam, LPARAM lParam)
+LRESULT CMaptoolScene::KeyInputProcess(WPARAM wParam, LPARAM lParam)
 {
 	switch (wParam)
 	{
 	case VK_LEFT:
+		camera->Move(-32, 0);
 		break;
 	case VK_RIGHT:
+		camera->Move(32, 0);
 		break;
 	case VK_UP:
+		camera->Move(0, -32);
 		break;
 	case VK_DOWN:
+		camera->Move(0, 32);
 		break;
 	}
 	return 0;
 }
 
-LRESULT CScene::MouseInputProcess(UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT CMaptoolScene::MouseInputProcess(UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message)
 	{
+	case WM_LBUTTONDOWN:
+	{
+		int nx = LOWORD(lParam) / 32 * 32;
+		int ny = HIWORD(lParam) / 32 * 32;
+		objects.emplace_back(new CTile(L"../../2020_CLIENT/Resources/ghost.png", nx, ny));
+	}
+	break;
 	default:
 		break;
 	}
