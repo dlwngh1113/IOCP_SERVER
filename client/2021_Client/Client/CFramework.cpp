@@ -3,6 +3,7 @@
 
 CFramework::CFramework(HINSTANCE hInst) : hInst{ hInst }
 {
+    scene = new CScene;
 }
 
 LRESULT CALLBACK CFramework::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -13,7 +14,9 @@ LRESULT CALLBACK CFramework::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
     {
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hWnd, &ps);
-        // TODO: 여기에 hdc를 사용하는 그리기 코드를 추가합니다...
+
+        scene->Render(hdc);
+
         EndPaint(hWnd, &ps);
     }
     break;

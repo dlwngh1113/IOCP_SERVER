@@ -1,8 +1,10 @@
 #pragma once
+#include"CScene.h"
 
 class CFramework
 {
     HINSTANCE hInst;
+    CScene* scene;
 public:
     CFramework() = default;
     CFramework(HINSTANCE hInst);

@@ -19,4 +19,6 @@
 
 #include "Resource.h"
 
-#define MAX_LOADSTRING 100
+constexpr int MAX_LOADSTRING = 100;
+constexpr int SCREEN_WIDTH = 1080;
+constexpr int SCREEN_HEIGHT = 720;
