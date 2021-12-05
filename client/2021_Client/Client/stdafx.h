@@ -16,6 +16,8 @@
 #include <tchar.h>
 
 #include <SDKDDKVer.h>
+#include <vector>
+#include <atlimage.h>
 
 #include "Resource.h"
 

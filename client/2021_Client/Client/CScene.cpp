@@ -13,4 +13,5 @@ CScene::~CScene()
 
 void CScene::Render(HDC hDC)
 {
+	camera->Render(hDC, objects);
 }

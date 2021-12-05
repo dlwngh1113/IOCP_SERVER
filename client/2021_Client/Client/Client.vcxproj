@@ -149,7 +149,9 @@
   <ItemGroup>
     <ClInclude Include="CCamera.h" />
     <ClInclude Include="CFramework.h" />
+    <ClInclude Include="CObject.h" />
     <ClInclude Include="CScene.h" />
+    <ClInclude Include="CTile.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
@@ -157,7 +159,9 @@
   <ItemGroup>
     <ClCompile Include="CCamera.cpp" />
     <ClCompile Include="CFramework.cpp" />
+    <ClCompile Include="CObject.cpp" />
     <ClCompile Include="CScene.cpp" />
+    <ClCompile Include="CTile.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
