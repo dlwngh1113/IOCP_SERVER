@@ -19,6 +19,8 @@
 #include <vector>
 #include <atlimage.h>
 #include <algorithm>
+#include <iostream>
+#include <fstream>
 
 #include "Resource.h"
 
