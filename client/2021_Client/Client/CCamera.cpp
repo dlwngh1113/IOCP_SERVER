@@ -5,8 +5,9 @@ CCamera::~CCamera()
 {
 }
 
-void CCamera::Render(HDC MemDC) const
+void CCamera::RenderSingleImage(HDC MemDC, CImage img, int x, int y, int w, int h) const
 {
+	img.StretchBlt(MemDC, x, y, w, h);
 }
 
 void CCamera::Render(HDC MemDC, const std::vector<CObject*>& objects) const

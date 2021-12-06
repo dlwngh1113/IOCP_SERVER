@@ -16,13 +16,13 @@ CTile::~CTile()
 
 void CTile::Render(HDC MemDC, int scrollX, int scrollY) const
 {
-	image.StretchBlt(MemDC, position.x - scrollX, position.y - scrollY, 16, 16);
+	image.StretchBlt(MemDC, position.x - scrollX, position.y - scrollY, TILE_SIZE, TILE_SIZE);
 }
 
 void CTile::Move(int dx, int dy)
 {
-	position.x += dx;
-	position.y += dy;
+	position.x += TILE_SIZE;
+	position.y += TILE_SIZE;
 }
 
 void CTile::Teleport(int x, int y)

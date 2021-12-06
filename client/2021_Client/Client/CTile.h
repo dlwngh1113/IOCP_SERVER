@@ -1,5 +1,9 @@
 #pragma once
 #include"CObject.h"
+constexpr int TILE_SIZE = 32;
+constexpr int WORLD_WIDTH = 800;
+constexpr int WORLD_HEIGHT = 800;
+
 class CTile: public CObject
 {
 public:

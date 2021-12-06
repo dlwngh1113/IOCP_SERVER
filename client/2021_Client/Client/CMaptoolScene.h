@@ -3,7 +3,9 @@
 #include "CTile.h"
 class CMaptoolScene : public CScene
 {
-	short map[800][800];
+	short map[WORLD_WIDTH][WORLD_HEIGHT]{ NULL };
+	std::vector<CImage*> tiles;
+	int curTile{ 0 };
 public:
 	CMaptoolScene();
 	virtual ~CMaptoolScene();

@@ -9,10 +9,10 @@ CScene::CScene()
 
 CScene::~CScene()
 {
-	printf("scene destructor called\n");
 	delete camera;
 	for (auto obj : objects)
 		delete obj;
+	objects.clear();
 }
 
 void CScene::Render(HDC hDC)
