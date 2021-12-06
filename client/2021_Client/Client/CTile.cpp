@@ -12,12 +12,11 @@ CTile::CTile(LPCTSTR fileName, int x, int y) :CObject(POINT{ x, y })
 
 CTile::~CTile()
 {
-	image.ReleaseDC();
 }
 
-void CTile::Render(HDC MemDC, int scrollX, int scrollY)
+void CTile::Render(HDC MemDC, int scrollX, int scrollY) const
 {
-	image.StretchBlt(MemDC, scrollX + position.x, scrollY + position.y, 16, 16);
+	image.StretchBlt(MemDC, position.x - scrollX, position.y - scrollY, 16, 16);
 }
 
 void CTile::Move(int dx, int dy)

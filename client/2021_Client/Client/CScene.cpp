@@ -4,14 +4,15 @@
 CScene::CScene()
 {
 	camera = new CCamera;
+	objects = std::vector<CObject*>();
 }
 
 CScene::~CScene()
 {
+	printf("scene destructor called\n");
 	delete camera;
-	for (auto& obj : objects)
+	for (auto obj : objects)
 		delete obj;
-	printf("scene destructor called");
 }
 
 void CScene::Render(HDC hDC)

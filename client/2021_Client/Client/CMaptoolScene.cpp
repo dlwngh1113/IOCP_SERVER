@@ -8,6 +8,9 @@ CMaptoolScene::CMaptoolScene() : CScene()
 CMaptoolScene::~CMaptoolScene()
 {
 	printf("maptool scene destructor called");
+	delete camera;
+	for (auto& obj : objects)
+		delete obj;
 }
 
 void CMaptoolScene::Render(HDC hDC)
@@ -57,7 +60,7 @@ LRESULT CMaptoolScene::MouseInputProcess(UINT message, WPARAM wParam, LPARAM lPa
 	{
 		int nx = LOWORD(lParam) / 32 * 32;
 		int ny = HIWORD(lParam) / 32 * 32;
-		objects.emplace_back(new CTile(L"../../2020_CLIENT/Resources/ghost.png", nx, ny));
+		objects.emplace_back(new CTile(L"../../2020_CLIENT/Resources/ghost.png", camera->GetScroll().x + nx, camera->GetScroll().y + ny));
 	}
 	break;
 	default:

@@ -29,7 +29,6 @@ LRESULT CFramework::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
     }
     break;
     case WM_DESTROY:
-        delete this;
         PostQuitMessage(0);
         break;
     case WM_KEYDOWN:

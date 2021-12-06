@@ -2,13 +2,15 @@
 #include"CObject.h"
 class CCamera
 {
-	int scrollX{ 0 };
-	int scrollY{ 0 };
+	POINT scroll;
 public:
 	CCamera() = default;
 	virtual ~CCamera();
 
-	void Render(HDC MemDC);
-	void Render(HDC MemDC, const std::vector<CObject*>& objects);
+	POINT& GetScroll() { return scroll; }
+
+	void Render(HDC MemDC) const;
+	void Render(HDC MemDC, const std::vector<CObject*>& objects) const;
+	void Render(HDC MemDC, const CObject* object) const;
 	void Move(int dx, int dy);
 };
