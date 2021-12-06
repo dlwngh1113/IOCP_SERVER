@@ -31,12 +31,19 @@ void CMaptoolScene::Render(HDC hDC)
 	PatBlt(MemDC, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, WHITENESS);
 
 	//Add Rendering Code
-	POINT x{ camera->GetScroll().x / TILE_SIZE, (camera->GetScroll().x + SCREEN_WIDTH) / TILE_SIZE };
-	POINT y{ camera->GetScroll().y / TILE_SIZE, (camera->GetScroll().y + SCREEN_HEIGHT) / TILE_SIZE };
-	for (int i = x.x; i < x.y; ++i)
-		for (int j = y.x; j < y.y; ++j)
-			tiles[map[std::clamp(i, 0, WORLD_WIDTH)][std::clamp(j, 0, WORLD_HEIGHT)]]->
-			StretchBlt(MemDC, i * TILE_SIZE - camera->GetScroll().x, j * TILE_SIZE - camera->GetScroll().y, TILE_SIZE, TILE_SIZE);
+	int startX = camera->GetScroll().x / TILE_SIZE;
+	int startY = camera->GetScroll().y / TILE_SIZE;
+	
+	int x = 0;
+	int y = 0;
+	for (int i = startX; i < startX + SCREEN_WIDTH / TILE_SIZE; ++i) {
+		x = std::clamp(i, 0, WORLD_WIDTH - 1);
+		for (int j = startY; j < startY + SCREEN_HEIGHT / TILE_SIZE; ++j)
+		{
+			y = std::clamp(j, 0, WORLD_HEIGHT - 1);
+			tiles[map[x][y]]->StretchBlt(MemDC, x * TILE_SIZE - camera->GetScroll().x, y * TILE_SIZE - camera->GetScroll().y, TILE_SIZE, TILE_SIZE);
+		}
+	}
 	//Render Code End
 
 	BitBlt(hDC, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MemDC, 0, 0, SRCCOPY);
@@ -82,7 +89,7 @@ LRESULT CMaptoolScene::MouseInputProcess(UINT message, WPARAM wParam, LPARAM lPa
 		int ny = HIWORD(lParam);
 		int i = (nx + camera->GetScroll().x) / TILE_SIZE;
 		int j = (ny + camera->GetScroll().y) / TILE_SIZE;
-		map[std::clamp(i, 0, WORLD_WIDTH)][std::clamp(j, 0, WORLD_HEIGHT)] = curTile;
+		map[std::clamp(i, 0, WORLD_WIDTH - 1)][std::clamp(j, 0, WORLD_HEIGHT - 1)] = curTile;
 	}
 	break;
 	default:

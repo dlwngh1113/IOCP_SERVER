@@ -5,7 +5,7 @@ class CMaptoolScene : public CScene
 {
 	short map[WORLD_WIDTH][WORLD_HEIGHT]{ NULL };
 	std::vector<CImage*> tiles;
-	int curTile{ 0 };
+	int curTile{ 1 };
 public:
 	CMaptoolScene();
 	virtual ~CMaptoolScene();
