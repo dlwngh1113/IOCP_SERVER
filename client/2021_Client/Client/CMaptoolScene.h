@@ -13,5 +13,7 @@ public:
 	virtual void Render(HDC hDC) override;
 	virtual LRESULT KeyInputProcess(WPARAM wParam, LPARAM lParam)override;
 	virtual LRESULT MouseInputProcess(UINT message, WPARAM wParam, LPARAM lParam)override;
+
+	void GenerateRandomMap();
 };
 

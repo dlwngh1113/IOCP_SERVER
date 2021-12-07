@@ -4,11 +4,16 @@
 CMaptoolScene::CMaptoolScene() : CScene()
 {
 	CImage* tmp = new CImage;
-	tmp->Load(L"../../2020_CLIENT/Resources/ghost.png");
+	tmp->Load(L"../../2020_CLIENT/Resources/tile1.png");
 	tiles.emplace_back(tmp);
 	tmp = new CImage;
-	tmp->Load(L"../../2020_CLIENT/Resources/player.png");
+	tmp->Load(L"../../2020_CLIENT/Resources/tile2.png");
 	tiles.emplace_back(tmp);
+	tmp = new CImage;
+	tmp->Load(L"../../2020_CLIENT/Resources/tile3.png");
+	tiles.emplace_back(tmp);
+
+	GenerateRandomMap();
 }
 
 CMaptoolScene::~CMaptoolScene()
@@ -75,6 +80,9 @@ LRESULT CMaptoolScene::KeyInputProcess(WPARAM wParam, LPARAM lParam)
 	case '1':
 		curTile = 1;
 		break;
+	case '2':
+		curTile = 2;
+		break;
 	}
 	return 0;
 }
@@ -96,4 +104,27 @@ LRESULT CMaptoolScene::MouseInputProcess(UINT message, WPARAM wParam, LPARAM lPa
 		break;
 	}
 	return 0;
+}
+
+void CMaptoolScene::GenerateRandomMap()
+{
+	for (int i = 0; i < WORLD_WIDTH; ++i)
+	{
+		for (int j = 0; j < WORLD_HEIGHT; ++j)
+		{
+			switch (rand() % 10)
+			{
+			case 0:
+				map[i][j] = 1;
+				break;
+			case 1:
+				map[i][j] = 2;
+				break;
+			default:
+				map[i][j] = 0;
+				break;
+			}
+		}
+	}
+	map[0][0] = 0;
 }

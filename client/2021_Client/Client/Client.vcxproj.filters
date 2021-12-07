@@ -28,6 +28,15 @@
     <Filter Include="소스 파일\Core\Framework\Scene">
       <UniqueIdentifier>{6219e985-f313-4216-9814-80c5834bfc33}</UniqueIdentifier>
     </Filter>
+    <Filter Include="소스 파일\Maptool">
+      <UniqueIdentifier>{3add47ea-3b1a-406f-abac-8f3e4e22ae9d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Maptool\Loader">
+      <UniqueIdentifier>{01d700a6-a784-474f-a743-f2407632ac37}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Maptool\Tile">
+      <UniqueIdentifier>{e7c41056-9886-4260-a44a-f9315468f55e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -37,12 +46,6 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="pch.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="CTile.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="CMaptoolScene.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="CScene.h">
@@ -57,18 +60,21 @@
     <ClInclude Include="CCamera.h">
       <Filter>소스 파일\Core\Framework\Camera</Filter>
     </ClInclude>
+    <ClInclude Include="CMapLoader.h">
+      <Filter>소스 파일\Maptool\Loader</Filter>
+    </ClInclude>
+    <ClInclude Include="CTile.h">
+      <Filter>소스 파일\Maptool\Tile</Filter>
+    </ClInclude>
+    <ClInclude Include="CMaptoolScene.h">
+      <Filter>소스 파일\Maptool</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="pch.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="CTile.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="CMaptoolScene.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="CScene.cpp">
@@ -82,6 +88,15 @@
     </ClCompile>
     <ClCompile Include="CCamera.cpp">
       <Filter>소스 파일\Core\Framework\Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="CMapLoader.cpp">
+      <Filter>소스 파일\Maptool\Loader</Filter>
+    </ClCompile>
+    <ClCompile Include="CTile.cpp">
+      <Filter>소스 파일\Maptool\Tile</Filter>
+    </ClCompile>
+    <ClCompile Include="CMaptoolScene.cpp">
+      <Filter>소스 파일\Maptool</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

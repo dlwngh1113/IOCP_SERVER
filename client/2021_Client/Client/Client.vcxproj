@@ -153,6 +153,7 @@
   <ItemGroup>
     <ClInclude Include="CCamera.h" />
     <ClInclude Include="CFramework.h" />
+    <ClInclude Include="CMapLoader.h" />
     <ClInclude Include="CMaptoolScene.h" />
     <ClInclude Include="CObject.h" />
     <ClInclude Include="CScene.h" />
@@ -164,6 +165,7 @@
   <ItemGroup>
     <ClCompile Include="CCamera.cpp" />
     <ClCompile Include="CFramework.cpp" />
+    <ClCompile Include="CMapLoader.cpp" />
     <ClCompile Include="CMaptoolScene.cpp" />
     <ClCompile Include="CObject.cpp" />
     <ClCompile Include="CScene.cpp" />
