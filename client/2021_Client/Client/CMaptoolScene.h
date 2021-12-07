@@ -1,6 +1,6 @@
 #pragma once
 #include "CScene.h"
-#include "CTile.h"
+#include"CMapLoader.h"
 class CMaptoolScene : public CScene
 {
 	short map[WORLD_WIDTH][WORLD_HEIGHT]{ NULL };

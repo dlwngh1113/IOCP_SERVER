@@ -12,8 +12,6 @@ CMaptoolScene::CMaptoolScene() : CScene()
 	tmp = new CImage;
 	tmp->Load(L"../../2020_CLIENT/Resources/tile3.png");
 	tiles.emplace_back(tmp);
-
-	GenerateRandomMap();
 }
 
 CMaptoolScene::~CMaptoolScene()
@@ -82,6 +80,12 @@ LRESULT CMaptoolScene::KeyInputProcess(WPARAM wParam, LPARAM lParam)
 		break;
 	case '2':
 		curTile = 2;
+		break;
+	case 's':
+		CMapLoader::SaveMap(map);
+		break;
+	case 'l':
+		CMapLoader::LoadMap(map);
 		break;
 	}
 	return 0;
