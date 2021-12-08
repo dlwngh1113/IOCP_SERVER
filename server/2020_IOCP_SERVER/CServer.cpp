@@ -239,7 +239,6 @@ void CServer::add_new_client(SOCKET ns)
 		characters[i] = client;
 		CreateIoCompletionPort(reinterpret_cast<HANDLE>(ns), h_iocp, i, 0);
 		client->StartRecv();
-		CTimer::GetInstance()->add_timer(i, OP_HEAL, std::chrono::system_clock::now() + std::chrono::seconds(5));
 	}
 
 	SOCKET cSocket = ::WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
@@ -540,6 +539,7 @@ int CServer::API_SendEnterMessage(lua_State* L)
 		{
 			monster->GetInfo()->atk_time = std::chrono::system_clock::now().time_since_epoch().count();
 			client->GetDamage(monster->GetInfo()->atk);
+			CTimer::GetInstance()->add_timer(user_id, OP_HEAL, std::chrono::system_clock::now() + std::chrono::seconds(5));
 
 			if (client->GetInfo()->hp <= 0)
 			{
