@@ -1,9 +1,10 @@
 #include "pch.h"
 #include "CMapLoader.h"
 
-void CMapLoader::LoadMap(short map[WORLD_WIDTH][WORLD_HEIGHT])
+template<class T>
+void CMapLoader::LoadMap(T map[WORLD_WIDTH][WORLD_HEIGHT], const char* fileName)
 {
-	std::ifstream in("map.txt");
+	std::ifstream in(fileName);
 	int w, h;
 
 	in >> w >> h;
@@ -16,9 +17,10 @@ void CMapLoader::LoadMap(short map[WORLD_WIDTH][WORLD_HEIGHT])
 	}
 }
 
-void CMapLoader::SaveMap(short map[WORLD_WIDTH][WORLD_HEIGHT])
+template<class T>
+void CMapLoader::SaveMap(T map[WORLD_WIDTH][WORLD_HEIGHT], const char* fileName)
 {
-	std::ofstream out("map.txt");
+	std::ofstream out(fileName);
 
 	out << WORLD_HEIGHT << ' ' << WORLD_WIDTH << '\n';
 

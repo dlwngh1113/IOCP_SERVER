@@ -16,37 +16,67 @@
     <Filter Include="헤더 파일\lua">
       <UniqueIdentifier>{83efb508-dba7-4716-b9d7-14405138aa42}</UniqueIdentifier>
     </Filter>
+    <Filter Include="소스 파일\Object">
+      <UniqueIdentifier>{be37a3b5-c942-43f3-8709-eb65793bb33f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Database">
+      <UniqueIdentifier>{057bcf47-b041-4e53-99bc-c7be6dba6915}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Object\Map">
+      <UniqueIdentifier>{e046358a-f5da-4d8e-aef1-bd35b024f91c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Object\Timer">
+      <UniqueIdentifier>{eb3b0ff5-0c1e-418d-9191-2d80ed0fcd0e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Object\Structs">
+      <UniqueIdentifier>{8d06a321-48c2-499c-9237-d997fb86a397}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Object\Characters">
+      <UniqueIdentifier>{82845764-08be-4c24-acfe-bfe16e562b48}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Extern">
+      <UniqueIdentifier>{fd69a396-1449-473d-b2da-db1b3a1d0d74}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="iocp_server.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="CTimer.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="CEvent.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="CServer.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="CClient.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="CDBConnector.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="CCharacter.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="CMonster.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="CInfo.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="CDBConnector.cpp">
+      <Filter>소스 파일\Database</Filter>
+    </ClCompile>
+    <ClCompile Include="CTimer.cpp">
+      <Filter>소스 파일\Object\Timer</Filter>
+    </ClCompile>
+    <ClCompile Include="CMap.cpp">
+      <Filter>소스 파일\Object\Map</Filter>
+    </ClCompile>
+    <ClCompile Include="CEvent.cpp">
+      <Filter>소스 파일\Object\Structs</Filter>
+    </ClCompile>
+    <ClCompile Include="CInfo.cpp">
+      <Filter>소스 파일\Object\Structs</Filter>
+    </ClCompile>
+    <ClCompile Include="CCharacter.cpp">
+      <Filter>소스 파일\Object\Characters</Filter>
+    </ClCompile>
+    <ClCompile Include="CClient.cpp">
+      <Filter>소스 파일\Object\Characters</Filter>
+    </ClCompile>
+    <ClCompile Include="CMonster.cpp">
+      <Filter>소스 파일\Object\Characters</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\client\2021_Client\Client\CMapLoader.cpp">
+      <Filter>소스 파일\Extern</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\client\2021_Client\Client\CTile.cpp">
+      <Filter>소스 파일\Extern</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -65,29 +95,38 @@
     <ClInclude Include="framework.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="CTimer.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="CEvent.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
     <ClInclude Include="CServer.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="CClient.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
     <ClInclude Include="CDBConnector.h">
-      <Filter>헤더 파일</Filter>
+      <Filter>소스 파일\Database</Filter>
     </ClInclude>
-    <ClInclude Include="CCharacter.h">
-      <Filter>헤더 파일</Filter>
+    <ClInclude Include="CTimer.h">
+      <Filter>소스 파일\Object\Timer</Filter>
     </ClInclude>
-    <ClInclude Include="CMonster.h">
-      <Filter>헤더 파일</Filter>
+    <ClInclude Include="CMap.h">
+      <Filter>소스 파일\Object\Map</Filter>
+    </ClInclude>
+    <ClInclude Include="CEvent.h">
+      <Filter>소스 파일\Object\Structs</Filter>
     </ClInclude>
     <ClInclude Include="CInfo.h">
-      <Filter>헤더 파일</Filter>
+      <Filter>소스 파일\Object\Structs</Filter>
+    </ClInclude>
+    <ClInclude Include="CCharacter.h">
+      <Filter>소스 파일\Object\Characters</Filter>
+    </ClInclude>
+    <ClInclude Include="CClient.h">
+      <Filter>소스 파일\Object\Characters</Filter>
+    </ClInclude>
+    <ClInclude Include="CMonster.h">
+      <Filter>소스 파일\Object\Characters</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\client\2021_Client\Client\CMapLoader.h">
+      <Filter>소스 파일\Extern</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\client\2021_Client\Client\CTile.h">
+      <Filter>소스 파일\Extern</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

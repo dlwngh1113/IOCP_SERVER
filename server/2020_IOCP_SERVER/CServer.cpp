@@ -3,11 +3,13 @@
 CServer::CServer()
 {
 	dbConnector = new CDBConnector();
+	map = new CMap();
 }
 
 CServer::~CServer()
 {
 	delete dbConnector;
+	delete map;
 	for (auto i = characters.begin(); i != characters.end(); ++i)
 		delete i->second;
 	characters.clear();
@@ -152,20 +154,10 @@ void CServer::worker_thread()
 
 void CServer::random_move_npc(int id)
 {
-	auto npc = reinterpret_cast<CMonster*>(characters[id]);
-	std::unordered_set <int> old_viewlist = npc->GetViewlist();
+	std::unordered_set <int> old_viewlist = characters[id]->GetViewlist();
 
-	int x = npc->GetInfo()->x;
-	int y = npc->GetInfo()->y;
-	switch (rand() % 4)
-	{
-	case 0: if (x > 0) x--; break;
-	case 1: if (x < (WORLD_WIDTH - 1)) x++; break;
-	case 2: if (y > 0) y--; break;
-	case 3: if (y < (WORLD_HEIGHT - 1)) y++; break;
-	}
-	npc->GetInfo()->x = x;
-	npc->GetInfo()->y = y;
+
+
 	std::unordered_set <int> new_viewlist;
 	for (auto i = characters.cbegin(); i != characters.cend(); ++i)
 	{
@@ -175,7 +167,7 @@ void CServer::random_move_npc(int id)
 	}
 
 	for (auto pl : old_viewlist) {
-		auto player = reinterpret_cast<CClient*>(characters[pl]);
+		auto player = reinterpret_cast<CClient*>(CServer::characters[pl]);
 		if (0 < new_viewlist.count(pl)) {
 			if (0 < player->GetViewlist().count(id))
 				player->send_move_packet(npc);
@@ -190,8 +182,8 @@ void CServer::random_move_npc(int id)
 	}
 
 	for (auto pl : new_viewlist) {
-		auto player = reinterpret_cast<CClient*>(characters[pl]);
-		if (0 == player->GetViewlist().count(pl)) 
+		auto player = reinterpret_cast<CClient*>(CServer::characters[pl]);
+		if (0 == player->GetViewlist().count(pl))
 		{
 			if (0 == player->GetViewlist().count(id))
 				player->EnterPlayer(npc);
@@ -416,25 +408,6 @@ void CServer::process_login(cs_packet_login* p, int id)
 
 void CServer::process_move(int id, char dir)
 {
-	auto client = reinterpret_cast<CClient*>(characters[id]);
-	short x = client->GetInfo()->x;
-	short y = client->GetInfo()->y;
-	switch (dir) {
-	case MV_UP: if (y > 0)
-		client->Move(0, -1);
-		break;
-	case MV_DOWN: if (y < (WORLD_HEIGHT - 1))
-		client->Move(0, 1);
-		break;
-	case MV_LEFT: if (x > 0)
-		client->Move(-1, 0);
-		break;
-	case MV_RIGHT: if (x < (WORLD_WIDTH - 1))
-		client->Move(1, 0);
-		break;
-	default: std::cout << "Unknown Direction in CS_MOVE packet.\n";
-		while (true);
-	}
 	std::unordered_set <int> old_viewlist = client->GetViewlist();
 
 	client->send_move_packet(client);
@@ -489,7 +462,7 @@ void CServer::process_move(int id, char dir)
 		}
 	}
 
-	for (auto& npc : new_viewlist) 
+	for (auto& npc : new_viewlist)
 	{
 		if (is_npc(npc))
 		{

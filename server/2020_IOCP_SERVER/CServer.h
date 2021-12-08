@@ -3,6 +3,7 @@
 #include"CMonster.h"
 #include"CTimer.h"
 #include"CDBConnector.h"
+#include"CMap.h"
 
 class CServer
 {
@@ -14,6 +15,7 @@ class CServer
 	std::mutex id_lock;
 
 	CDBConnector* dbConnector;
+	CMap* map;
 public:
 	static concurrency::concurrent_unordered_map<int, CCharacter*> characters;
 	CServer();
