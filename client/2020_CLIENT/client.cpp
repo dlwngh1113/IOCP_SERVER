@@ -1,10 +1,4 @@
-#include<SFML/Graphics.hpp>
-#include<SFML/Network.hpp>
-#include"..\..\server\2020_IOCP_SERVER\protocol.h"
-#include <windows.h>
-#include <iostream>
-#include <unordered_map>
-#include <chrono>
+#include"CMapLoader.h"
 using namespace std;
 using namespace chrono;
 
@@ -101,9 +95,12 @@ OBJECT avatar;
 unordered_map <int, OBJECT> npcs;
 vector<sf::Text> g_chatLog;
 
-OBJECT white_tile;
-OBJECT black_tile;
+OBJECT tile1;
+OBJECT tile2;
+OBJECT tile3;
 OBJECT ghost;
+
+short g_map[WORLD_WIDTH][WORLD_HEIGHT];
 
 sf::Texture* board;
 sf::Texture* pieces;
@@ -116,6 +113,7 @@ void client_initialize()
 	board = new sf::Texture;
 	pieces = new sf::Texture;
 	ghost_img = new sf::Texture;
+	CMapLoader::LoadMap(g_map, "map.txt");
 	if (false == g_font.loadFromFile("Resources/cour.ttf")) {
 		cout << "Font Loading Error!\n";
 		while (true);
@@ -123,8 +121,9 @@ void client_initialize()
 	board->loadFromFile("Resources/maptile.png");
 	pieces->loadFromFile("Resources/players.png");
 	ghost_img->loadFromFile("Resources/ghost.png");
-	white_tile = OBJECT{ *board, 0, 0, TILE_WIDTH, TILE_WIDTH };
-	black_tile = OBJECT{ *board, 32, 0, TILE_WIDTH, TILE_WIDTH };
+	tile1 = OBJECT{ *board, 0, 0, TILE_WIDTH, TILE_WIDTH };
+	tile2 = OBJECT{ *board, 32, 0, TILE_WIDTH, TILE_WIDTH };
+	tile3 = OBJECT{ *board, 64, 0, TILE_WIDTH, TILE_WIDTH };
 	ghost = OBJECT{ *ghost_img, 0, 0, TILE_WIDTH, TILE_WIDTH };
 	avatar = OBJECT{ *pieces, 0, 0, TILE_WIDTH, TILE_WIDTH };
 	avatar.move(4, 4);
@@ -330,14 +329,19 @@ void client_main()
 			int tile_y = j - g_top_y;
 			if ((i < 0) || (j < 0)) continue;
 			if ((i > WORLD_WIDTH - 1) || (j > WORLD_HEIGHT - 1))continue;
-			if (((i + j) % 2) == 0) {
-				white_tile.a_move(TILE_WIDTH * tile_x + 7, TILE_WIDTH * tile_y + 7);
-				white_tile.a_draw();
+			if (g_map[i][j] == 0) {
+				tile1.a_move(TILE_WIDTH * tile_x + 7, TILE_WIDTH * tile_y + 7);
+				tile1.a_draw();
+			}
+			else if(g_map[i][j] == 1)
+			{
+				tile2.a_move(TILE_WIDTH * tile_x + 7, TILE_WIDTH * tile_y + 7);
+				tile2.a_draw();
 			}
 			else
 			{
-				black_tile.a_move(TILE_WIDTH * tile_x + 7, TILE_WIDTH * tile_y + 7);
-				black_tile.a_draw();
+				tile3.a_move(TILE_WIDTH * tile_x + 7, TILE_WIDTH * tile_y + 7);
+				tile3.a_draw();
 			}
 			if (!(i % 8) & !(j % 8)) {
 				ghost.a_move(TILE_WIDTH * tile_x + 7, TILE_WIDTH * tile_y + 7);

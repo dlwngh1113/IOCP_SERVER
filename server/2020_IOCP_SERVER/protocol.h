@@ -1,6 +1,4 @@
 #pragma once
-#include<WinSock2.h>
-#include<ws2def.h>
 
 constexpr int SERVER_PORT = 3500;
 constexpr int MAX_ID_LEN = 10;
@@ -41,13 +39,6 @@ constexpr char CS_CHAT		= 3;
 constexpr char CS_LOGOUT	= 4;
 constexpr char CS_TELEPORT	= 5;				// 부하 테스트용 동접 테스트를 위해 텔러포트로 Hot Spot 해소
 
-struct OVER_EX {
-	WSAOVERLAPPED wsa_over;
-	char	op_mode;
-	WSABUF	wsa_buf;
-	unsigned char iocp_buf[MAX_BUFFER];
-	int		object_id;
-};
 
 #pragma pack (push, 1)
 
