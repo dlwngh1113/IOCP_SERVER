@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "CMapLoader.h"
 
 void CMapLoader::LoadMap(short map[WORLD_WIDTH][WORLD_HEIGHT], const char* fileName)

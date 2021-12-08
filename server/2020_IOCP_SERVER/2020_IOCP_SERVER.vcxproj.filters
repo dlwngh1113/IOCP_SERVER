@@ -72,10 +72,7 @@
     <ClCompile Include="CMonster.cpp">
       <Filter>소스 파일\Object\Characters</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\client\2021_Client\Client\CMapLoader.cpp">
-      <Filter>소스 파일\Extern</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\client\2021_Client\Client\CTile.cpp">
+    <ClCompile Include="CMapLoader.cpp">
       <Filter>소스 파일\Extern</Filter>
     </ClCompile>
   </ItemGroup>
@@ -122,10 +119,7 @@
     <ClInclude Include="CMonster.h">
       <Filter>소스 파일\Object\Characters</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\client\2021_Client\Client\CMapLoader.h">
-      <Filter>소스 파일\Extern</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\client\2021_Client\Client\CTile.h">
+    <ClInclude Include="CMapLoader.h">
       <Filter>소스 파일\Extern</Filter>
     </ClInclude>
   </ItemGroup>

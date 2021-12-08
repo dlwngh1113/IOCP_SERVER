@@ -1,5 +1,7 @@
 #pragma once
-#include"../../client/2021_Client/Client/CMapLoader.h"
+#include"CMapLoader.h"
+#include"CClient.h"
+#include"CMonster.h"
 class CMap
 {
 	short map[WORLD_WIDTH][WORLD_HEIGHT]{ 0 };
@@ -7,7 +9,8 @@ public:
 	CMap() = default;
 	CMap(const char* fileName);
 	virtual ~CMap();
-	void ProcessMove(int id, int dir);
-	void RandomMove(int id);
+	void GetValidPosition(int& x, int& y);
+	void ProcessMove(CClient* client, int dir);
+	void RandomMove(CMonster* npc);
 };
 

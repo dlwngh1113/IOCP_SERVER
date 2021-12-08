@@ -82,10 +82,10 @@ LRESULT CMaptoolScene::KeyInputProcess(WPARAM wParam, LPARAM lParam)
 		curTile = 2;
 		break;
 	case 's':
-		CMapLoader::SaveMap(map);
+		CMapLoader::SaveMap(map, "map.txt");
 		break;
 	case 'l':
-		CMapLoader::LoadMap(map);
+		CMapLoader::LoadMap(map, "map.txt");
 		break;
 	}
 	return 0;

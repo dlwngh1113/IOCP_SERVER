@@ -3,7 +3,7 @@
 CServer::CServer()
 {
 	dbConnector = new CDBConnector();
-	map = new CMap();
+	map = new CMap("map.txt");
 }
 
 CServer::~CServer()
@@ -60,12 +60,15 @@ void CServer::run()
 void CServer::initialize_NPC()
 {
 	std::cout << "Initializing NPCs\n";
+	int x, y;
 	for (int i = MAX_USER; i < MAX_USER + NUM_NPC; ++i)
 	{
 		char npc_name[50];
 		sprintf_s(npc_name, "N%d", i);
 
-		CInfo* info = new CInfo(i, npc_name, rand() % WORLD_WIDTH, rand() % WORLD_HEIGHT);
+		int x, y;
+		map->GetValidPosition(x, y);
+		CInfo* info = new CInfo(i, npc_name, x, y);
 		info->level = rand() % 10 + 1;
 		info->atk = info->level;
 		info->hp = info->level * 10;
@@ -154,9 +157,10 @@ void CServer::worker_thread()
 
 void CServer::random_move_npc(int id)
 {
+	auto npc = reinterpret_cast<CMonster*>(CServer::characters[id]);
 	std::unordered_set <int> old_viewlist = characters[id]->GetViewlist();
 
-
+	map->RandomMove(npc);
 
 	std::unordered_set <int> new_viewlist;
 	for (auto i = characters.cbegin(); i != characters.cend(); ++i)
@@ -408,8 +412,10 @@ void CServer::process_login(cs_packet_login* p, int id)
 
 void CServer::process_move(int id, char dir)
 {
+	auto client = reinterpret_cast<CClient*>(CServer::characters[id]);
 	std::unordered_set <int> old_viewlist = client->GetViewlist();
 
+	map->ProcessMove(client, dir);
 	client->send_move_packet(client);
 
 	std::unordered_set <int> new_viewlist;

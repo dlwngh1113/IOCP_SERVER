@@ -139,14 +139,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\client\2021_Client\Client\CMapLoader.cpp" />
-    <ClCompile Include="..\..\client\2021_Client\Client\CTile.cpp" />
     <ClCompile Include="CCharacter.cpp" />
     <ClCompile Include="CClient.cpp" />
     <ClCompile Include="CDBConnector.cpp" />
     <ClCompile Include="CEvent.cpp" />
     <ClCompile Include="CInfo.cpp" />
     <ClCompile Include="CMap.cpp" />
+    <ClCompile Include="CMapLoader.cpp" />
     <ClCompile Include="CMonster.cpp" />
     <ClCompile Include="CServer.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
@@ -164,14 +163,13 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\client\2021_Client\Client\CMapLoader.h" />
-    <ClInclude Include="..\..\client\2021_Client\Client\CTile.h" />
     <ClInclude Include="CCharacter.h" />
     <ClInclude Include="CClient.h" />
     <ClInclude Include="CDBConnector.h" />
     <ClInclude Include="CEvent.h" />
     <ClInclude Include="CInfo.h" />
     <ClInclude Include="CMap.h" />
+    <ClInclude Include="CMapLoader.h" />
     <ClInclude Include="CMonster.h" />
     <ClInclude Include="CServer.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>

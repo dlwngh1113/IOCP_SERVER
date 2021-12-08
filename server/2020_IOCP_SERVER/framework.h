@@ -22,6 +22,7 @@ extern "C" {
 #include <windows.h>  
 #include <stdio.h>  
 #include <sqlext.h>
+#include <fstream>
 
 #pragma comment(lib, "Ws2_32.lib")
 #pragma comment(lib, "MSWSock.lib")

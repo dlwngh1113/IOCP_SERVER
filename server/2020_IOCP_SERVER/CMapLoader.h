@@ -1,5 +1,5 @@
 #pragma once
-#include"CTile.h"
+#include"framework.h"
 class CMapLoader
 {
 public:
