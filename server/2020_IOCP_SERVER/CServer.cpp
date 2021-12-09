@@ -274,8 +274,8 @@ void CServer::disconnect_client(int id)
 
 void CServer::wake_up_npc(int id)
 {
+	characters[id]->GetInfo()->isUse = true;
 	CTimer::GetInstance()->add_timer(id, OP_RANDOM_MOVE, std::chrono::system_clock::now() + std::chrono::seconds(1));
-	//std::cout << "wake_up_npc called id - " << id << std::endl;
 }
 
 bool CServer::is_near(int p1, int p2)
@@ -415,6 +415,7 @@ void CServer::process_move(int id, char dir)
 	std::unordered_set <int> old_viewlist = client->GetViewlist();
 
 	map->ProcessMove(client, dir);
+
 	client->send_move_packet(client);
 
 	std::unordered_set <int> new_viewlist;
@@ -538,8 +539,8 @@ int CServer::API_SendEnterMessage(lua_State* L)
 		if (std::chrono::system_clock::now().time_since_epoch().count() > monster->GetInfo()->atk_time)
 		{
 			monster->GetInfo()->atk_time = std::chrono::system_clock::now().time_since_epoch().count();
-			client->GetDamage(monster->GetInfo()->atk);
-			CTimer::GetInstance()->add_timer(user_id, OP_HEAL, std::chrono::system_clock::now() + std::chrono::seconds(5));
+			if(client->GetDamage(monster->GetInfo()->atk))
+				CTimer::GetInstance()->add_timer(user_id, OP_HEAL, std::chrono::system_clock::now() + std::chrono::seconds(5));
 
 			if (client->GetInfo()->hp <= 0)
 			{

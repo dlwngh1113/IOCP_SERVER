@@ -54,6 +54,19 @@ void CClient::Release()
 	this->m_sock = 0;
 }
 
+bool CClient::GetDamage(short otherAtk)
+{
+	GetInfo()->c_lock.lock();
+	GetInfo()->hp -= otherAtk;
+	GetInfo()->c_lock.unlock();
+	if (std::chrono::system_clock::now().time_since_epoch().count() > heal_time)
+	{
+		heal_time = std::chrono::system_clock::now().time_since_epoch().count();
+		return true;
+	}
+	return false;
+}
+
 void CClient::AutoHeal()
 {
 	//this->GetInfo()->c_lock.lock();

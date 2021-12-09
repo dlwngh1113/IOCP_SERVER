@@ -261,8 +261,8 @@ void ProcessPacket(char* ptr)
 		avatar.level = p->level;
 		avatar.exp = p->exp;
 		avatar.hp = p->hp;
-		//printf("avatar level = %hd exp = %d hp = %hd, packet level = %hd exp = %d hp = %hd\n",
-		//	avatar.level, avatar.exp, avatar.hp, p->level, p->exp, p->hp);
+		printf("avatar level = %hd exp = %d hp = %hd, packet level = %hd exp = %d hp = %hd\n",
+			avatar.level, avatar.exp, avatar.hp, p->level, p->exp, p->hp);
 	}
 	break;
 	default:

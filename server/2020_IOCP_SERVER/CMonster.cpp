@@ -55,7 +55,6 @@ void CMonster::Teleport(short x, short y)
 void CMonster::MoveNotify(int id)
 {
 	lua_l.lock();
-	GetInfo()->isUse = true;
 	lua_getglobal(L, "event_player_move");
 	lua_pushnumber(L, id);
 	lua_pcall(L, 1, 1, 0);

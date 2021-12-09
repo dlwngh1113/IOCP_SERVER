@@ -8,6 +8,8 @@ class CClient : public CCharacter
 	unsigned char* m_packet_start;
 	unsigned char* m_recv_start;
 
+	int heal_time{ 0 };
+
 	void send_packet(void* p);
 public:
 #pragma region getter
@@ -29,6 +31,7 @@ public:
 
 	void Release();
 
+	virtual bool GetDamage(short otherAtk) override;
 	void AutoHeal();
 	void LevelUp(int targetID, int exp);
 	void HitByPlayer(char* mess);

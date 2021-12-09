@@ -52,18 +52,21 @@ void CMap::RandomMove(CMonster* npc)
 	int y = npc->GetInfo()->y;
 	switch (rand() % 4)
 	{
-	case 0: if (x > 0 && (map[x - 1][y] == 0))
-		--x;
+	case 0: 
+		if (x > 0 && (map[x - 1][y] == 0))
+			--x;
 		break;
-	case 1: if ((x < WORLD_WIDTH - 1) && (map[x + 1][y] == 0))
-		++x;
+	case 1: 
+		if ((x < WORLD_WIDTH - 1) && (map[x + 1][y] == 0))
+			++x;
 		break;
-	case 2: if ((y < WORLD_HEIGHT - 1) && (map[x][y + 1] == 0))
-		--y;
+	case 2: 
+		if ((y < WORLD_HEIGHT - 1) && (map[x][y + 1] == 0))
+			++y;
 		break;
 	case 3:
 		if (y > 0 && map[x][y - 1] == 0)
-			++y;
+			--y;
 		break;
 	}
 	npc->GetInfo()->x = x;
