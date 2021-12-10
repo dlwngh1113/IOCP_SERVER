@@ -63,8 +63,8 @@ void CTimer::time_worker()
 				break;
 				case OP_HEAL:
 				{
-					auto maxHp = CServer::characters[ev.obj_id]->GetInfo()->level * 70;
-					if (CServer::characters[ev.obj_id]->GetInfo()->hp != maxHp)
+					//auto maxHp = CServer::characters[ev.obj_id]->GetInfo()->level * 70;
+					//if (CServer::characters[ev.obj_id]->GetInfo()->hp != maxHp)
 					{
 						OVER_EX* over_ex = new OVER_EX;
 						over_ex->op_mode = OP_HEAL;
